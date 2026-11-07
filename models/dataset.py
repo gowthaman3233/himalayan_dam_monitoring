@@ -362,6 +362,104 @@ def discover_patches(directory: str | Path) -> list[PatchRef]:
 # --------------------------------------------------------------------------- #
 
 
+@dataclass(frozen=True)
+class ChannelStatistics:
+    """Per-channel mean and standard deviation, with the channels they describe.
+
+    The channel names travel with the numbers so a mismatch is caught rather
+    than silently applying the wrong scaling to each slot.
+    """
+
+    channels: tuple[str, ...]
+    mean: tuple[float, ...]
+    sd: tuple[float, ...]
+    patches: int
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "channels": list(self.channels),
+            "mean": list(self.mean),
+            "sd": list(self.sd),
+            "patches": self.patches,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ChannelStatistics":
+        return cls(
+            channels=tuple(data["channels"]),
+            mean=tuple(float(v) for v in data["mean"]),
+            sd=tuple(float(v) for v in data["sd"]),
+            patches=int(data.get("patches", 0)),
+        )
+
+    def apply(self, x: np.ndarray) -> np.ndarray:
+        """Standardise a ``(channels, h, w)`` array."""
+        mean = np.asarray(self.mean, dtype=np.float32)[:, None, None]
+        sd = np.asarray(self.sd, dtype=np.float32)[:, None, None]
+        return ((np.asarray(x, dtype=np.float32) - mean) / sd).astype(np.float32)
+
+
+def channel_statistics(
+    refs: Sequence[PatchRef], cfg: "Config"
+) -> ChannelStatistics:
+    """Per-channel mean and sd over the given patches.
+
+    **Pass the TRAINING split only.** Computing these over every patch would
+    carry the test split's distribution into the model, which is the same
+    class of leak as a random patch split and just as invisible in the output.
+
+    A zero standard deviation -- a constant channel -- is replaced by 1.0 so
+    the channel passes through as a constant rather than producing NaN. A NaN
+    input silently poisons every gradient in the batch.
+    """
+    channels = list(cfg.models.channels)
+    total = np.zeros(len(channels), dtype=np.float64)
+    total_sq = np.zeros(len(channels), dtype=np.float64)
+    pixels = 0
+    for ref in refs:
+        with np.load(ref.path, allow_pickle=True) as data:
+            x = np.asarray(data["x"], dtype=np.float64)
+            names = [str(c) for c in data["channels"]]
+        if names != channels:
+            raise DatasetError(
+                f"{ref.path.name} holds channels {names} but models.channels "
+                f"is {channels}; statistics would describe the wrong slots"
+            )
+        finite = np.isfinite(x)
+        total += np.where(finite, x, 0.0).sum(axis=(1, 2))
+        total_sq += np.where(finite, x * x, 0.0).sum(axis=(1, 2))
+        pixels += int(finite[0].size)
+    if not pixels:
+        raise DatasetError("no patches supplied, so no statistics exist")
+
+    mean = total / pixels
+    variance = np.maximum(total_sq / pixels - mean ** 2, 0.0)
+    sd = np.sqrt(variance)
+    constant = sd < 1e-9
+    if constant.any():
+        log.warning(
+            "channel(s) %s are constant across the training split; their "
+            "scaling is set to 1.0 so they pass through rather than "
+            "producing NaN, but a constant channel carries no information",
+            ", ".join(c for c, flag in zip(channels, constant) if flag),
+        )
+    sd = np.where(constant, 1.0, sd)
+
+    stats = ChannelStatistics(
+        channels=tuple(channels),
+        mean=tuple(float(v) for v in mean),
+        sd=tuple(float(v) for v in sd),
+        patches=len(refs),
+    )
+    spread = float(np.max(np.abs(mean)) / max(np.min(np.abs(mean)), 1e-12))
+    log.info(
+        "channel statistics from %d training patch(es); the raw channel means "
+        "span %.0fx, which is why they are standardised",
+        len(refs), spread,
+    )
+    return stats
+
+
 class PatchDataset:
     """A ``torch`` dataset over prepared patches.
 
@@ -381,11 +479,29 @@ class PatchDataset:
         cfg: "Config",
         *,
         verify_channels: bool = True,
+        statistics: "ChannelStatistics | None" = None,
     ) -> None:
         self.refs = list(refs)
         self.settings = cfg.models
         self.verify_channels = verify_channels
         self._expected = list(self.settings.channels)
+        self.statistics = statistics
+        if (
+            statistics is not None
+            and list(statistics.channels) != self._expected
+        ):
+            raise DatasetError(
+                f"statistics describe channels {list(statistics.channels)} "
+                f"but models.channels is {self._expected}; each slot would be "
+                "scaled by the wrong numbers"
+            )
+        if statistics is None and self.settings.normalisation != "none":
+            log.warning(
+                "no channel statistics supplied while normalisation is %r, so "
+                "patches are fed RAW. This stack spans four orders of "
+                "magnitude and a raw run collapses to the majority class",
+                self.settings.normalisation,
+            )
 
     def __len__(self) -> int:
         return len(self.refs)
@@ -415,6 +531,8 @@ class PatchDataset:
             channels = [str(c) for c in data["channels"]]
         if self.verify_channels:
             self._check(ref.path, channels, x)
+        if self.statistics is not None and self.settings.normalisation != "none":
+            x = self.statistics.apply(x)
         return torch.from_numpy(x), torch.from_numpy(y.astype(np.int64))
 
     # -- reporting ---------------------------------------------------------- #

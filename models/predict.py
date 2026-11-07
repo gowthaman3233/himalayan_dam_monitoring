@@ -104,6 +104,20 @@ def load_checkpoint(
             "that is wrong everywhere without looking wrong."
         )
 
+    # Inference must scale its input exactly as training did. A checkpoint
+    # trained on standardised patches applied to raw ones sees a completely
+    # different distribution and returns confident nonsense, with nothing in
+    # the output to show it.
+    if payload.get("normalisation", "none") != "none" and not payload.get(
+        "statistics"
+    ):
+        raise PredictionError(
+            f"{path.name} was trained with normalisation "
+            f"{payload.get('normalisation')!r} but carries no channel "
+            f"statistics, so its input scaling cannot be reproduced. Retrain "
+            f"with a current version rather than running it unscaled."
+        )
+
     model = build_model(cfg, payload["model_name"])
     model.load_state_dict(payload["state_dict"])
     model.to(torch.device(device) if device else torch.device("cpu"))
@@ -127,6 +141,7 @@ def predict_stack(
     tile_px: int | None = None,
     overlap_px: int | None = None,
     device: str | None = None,
+    statistics: Any | None = None,
 ) -> Prediction:
     """Classify a ``(channels, height, width)`` stack.
 
@@ -139,6 +154,10 @@ def predict_stack(
         tile_px: tile edge, defaulting to the training patch size.
         overlap_px: context discarded at each tile edge, defaulting to a
             quarter of the tile.
+        statistics: the :class:`~models.dataset.ChannelStatistics` the model
+            was trained with, from its checkpoint. Omitting them while the
+            config asks for normalisation feeds the model a distribution it
+            never saw, so it is refused rather than guessed.
 
     Returns:
         A :class:`Prediction`.
@@ -162,6 +181,12 @@ def predict_stack(
     classes_n = cfg.models.num_classes
     dev = torch.device(device) if device else torch.device("cpu")
 
+    # Nodata is detected on the RAW stack, BEFORE any scaling.
+    #
+    # Standardising maps an all-zero pixel to -mean/sd, which is not zero, so
+    # detecting nodata afterwards would find nothing and the scene edge would
+    # be classified instead of marked unseen -- the exact failure recorded in
+    # docs/validation.md 24, Finding 4a.
     if unseen is None:
         unseen = np.all(stack == 0.0, axis=0)
     else:
@@ -170,6 +195,22 @@ def predict_stack(
             raise PredictionError(
                 f"unseen {unseen.shape} does not match the stack {(height, width)}"
             )
+
+    if cfg.models.normalisation != "none":
+        if statistics is None:
+            raise PredictionError(
+                f"models.normalisation is {cfg.models.normalisation!r} but no "
+                f"channel statistics were supplied. Pass the ones from the "
+                f"checkpoint (load_checkpoint returns them): a model trained "
+                f"on standardised input and applied to raw input returns "
+                f"confident nonsense, with nothing in the output to show it."
+            )
+        if list(statistics.channels) != list(cfg.models.channels):
+            raise PredictionError(
+                f"statistics describe {list(statistics.channels)} but the "
+                f"configured stack is {list(cfg.models.channels)}"
+            )
+        stack = statistics.apply(stack)
 
     probabilities = np.zeros((classes_n, height, width), dtype=np.float32)
 

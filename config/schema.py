@@ -1345,6 +1345,22 @@ class ModelsConfig(Strict):
             "the model's in_channels is len(channels)."
         ),
     )
+    normalisation: Literal["per_channel_zscore", "none"] = Field(
+        default="per_channel_zscore",
+        description=(
+            "How to scale the input channels. This stack spans four orders of "
+            "magnitude -- reflectance near 0.2, indices at +/-1, slope 0-90 "
+            "and DEM in the THOUSANDS -- and fed raw to the first "
+            "convolution the DEM channel dominates and the network collapses "
+            "to the majority class. Measured on real Landslide4Sense data: "
+            "landslide IoU 0.0 from both models, with bit-identical metrics. "
+            "On synthetic data at realistic scales, standardisation alone "
+            "took landslide IoU from 0.127 to 0.769 with nothing else "
+            "changed. Statistics are computed from the TRAINING split only "
+            "and stored in the checkpoint, so inference applies exactly what "
+            "training saw. 'none' is offered for data already scaled."
+        ),
+    )
     patch: PatchConfig = PatchConfig()
     split: SplitConfig = SplitConfig()
     training: TrainingConfig = TrainingConfig()

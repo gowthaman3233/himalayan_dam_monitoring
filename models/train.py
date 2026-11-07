@@ -39,9 +39,11 @@ from typing import TYPE_CHECKING, Any, Sequence
 import numpy as np
 
 from models.dataset import (
+    ChannelStatistics,
     PatchDataset,
     PatchRef,
     assign_splits,
+    channel_statistics,
     discover_patches,
     split_summary,
 )
@@ -100,6 +102,7 @@ class TrainingRun:
     parameters: int = 0
     class_pixels: dict[str, int] = field(default_factory=dict)
     stopped_early: bool = False
+    statistics: "ChannelStatistics | None" = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -112,6 +115,9 @@ class TrainingRun:
             "parameters": self.parameters,
             "class_pixels_trained_on": self.class_pixels,
             "checkpoint": None if self.checkpoint is None else str(self.checkpoint),
+            "channel_statistics": (
+                None if self.statistics is None else self.statistics.as_dict()
+            ),
             "history": [r.as_dict() for r in self.history],
         }
 
@@ -199,6 +205,8 @@ def predict_split(
     device: "torch.device | None" = None,
     batch_size: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
+    # The dataset carries its own statistics, so scaling is applied on load
+    # and cannot differ between training and evaluation.
     """Reference and predicted labels over a whole partition, flattened.
 
     Returns:
@@ -296,8 +304,15 @@ def train(
     out_dir.mkdir(parents=True, exist_ok=True)
     dev = _device(device)
 
-    train_set = PatchDataset(splits["train"], cfg)
-    val_set = PatchDataset(splits["val"], cfg)
+    # Statistics from the TRAINING split only. Computing them over every
+    # patch would carry the test distribution into the model -- the same class
+    # of leak as a random patch split, and just as invisible in the output.
+    statistics = None
+    if cfg.models.normalisation != "none":
+        statistics = channel_statistics(splits["train"], cfg)
+
+    train_set = PatchDataset(splits["train"], cfg, statistics=statistics)
+    val_set = PatchDataset(splits["val"], cfg, statistics=statistics)
     class_pixels = train_set.class_pixel_counts()
     log.info("training on class pixels: %s", class_pixels)
     missing = [
@@ -395,6 +410,13 @@ def train(
                     "monitored": monitored,
                     "channels": list(cfg.models.channels),
                     "classes": list(cfg.models.classes),
+                    # Inference must apply exactly what training saw.
+                    # Recomputing at predict time from different data would
+                    # shift every input distribution the model learned.
+                    "normalisation": cfg.models.normalisation,
+                    "statistics": (
+                        None if statistics is None else statistics.as_dict()
+                    ),
                 },
                 checkpoint,
             )
@@ -424,6 +446,7 @@ def train(
         parameters=parameter_count(model),
         class_pixels=class_pixels,
         stopped_early=stopped_early,
+        statistics=statistics,
     )
 
 
@@ -471,7 +494,10 @@ def compare_models(
             )
         model.to(_device(device))
         evaluations[name] = evaluate_split(
-            model, PatchDataset(splits["test"], cfg), cfg, device=_device(device)
+            model,
+            PatchDataset(splits["test"], cfg, statistics=run.statistics),
+            cfg,
+            device=_device(device),
         )
         log.info("%s on the test split:\n%s", name, evaluations[name].report())
 

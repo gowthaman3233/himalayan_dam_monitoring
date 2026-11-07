@@ -235,13 +235,25 @@ class TestCheckpointGuards:
 
 
 class TestInferenceNeverInventsObservations:
+    @staticmethod
+    def _unscaled(cfg: Config) -> Config:
+        """``tiny`` with normalisation off.
+
+        These tests are about nodata handling, not scaling. Turning it off
+        keeps them focused -- and the ordering between the two is covered
+        separately below, because getting it wrong is silent.
+        """
+        data = tiny(cfg).model_dump(mode="python")
+        data["models"]["normalisation"] = "none"
+        return Config.model_validate(data)
+
     def test_nodata_is_ignore_index_not_a_class(self, cfg: Config) -> None:
         """A model will happily call an all-zero patch water at high confidence.
 
         That is how the Phase 4 fusion came to report water over scene edges
         (docs/methods.md 10.13.2), so inference must not repeat it.
         """
-        small = tiny(cfg)
+        small = self._unscaled(cfg)
         model = build_model(small, MODEL_PLAIN)
         rng = np.random.default_rng(0)
         stack = rng.normal(size=(small.models.in_channels, 70, 80)).astype(
@@ -258,7 +270,7 @@ class TestInferenceNeverInventsObservations:
     def test_probabilities_are_nan_where_nothing_was_seen(
         self, cfg: Config
     ) -> None:
-        small = tiny(cfg)
+        small = self._unscaled(cfg)
         model = build_model(small, MODEL_PLAIN)
         stack = np.ones((small.models.in_channels, 40, 40), dtype="float32")
         stack[:, :8, :] = 0.0
@@ -268,7 +280,7 @@ class TestInferenceNeverInventsObservations:
         assert not np.isnan(result.probabilities[:, 8:, :]).any()
 
     def test_probabilities_sum_to_one_where_classified(self, cfg: Config) -> None:
-        small = tiny(cfg)
+        small = self._unscaled(cfg)
         model = build_model(small, MODEL_PLAIN)
         rng = np.random.default_rng(1)
         stack = rng.normal(size=(small.models.in_channels, 40, 48)).astype(
@@ -280,7 +292,7 @@ class TestInferenceNeverInventsObservations:
         np.testing.assert_allclose(totals, 1.0, atol=1e-4)
 
     def test_a_wrong_channel_count_is_refused(self, cfg: Config) -> None:
-        small = tiny(cfg)
+        small = self._unscaled(cfg)
         model = build_model(small, MODEL_PLAIN)
         with pytest.raises(PredictionError, match="models.channels declares"):
             predict_stack(model, np.zeros((3, 40, 40), "float32"), small,
@@ -288,7 +300,7 @@ class TestInferenceNeverInventsObservations:
 
     def test_every_pixel_is_covered_by_tiling(self, cfg: Config) -> None:
         """A raster not a multiple of the tile must still be fully classified."""
-        small = tiny(cfg)
+        small = self._unscaled(cfg)
         model = build_model(small, MODEL_PLAIN)
         rng = np.random.default_rng(2)
         stack = rng.normal(size=(small.models.in_channels, 77, 93)).astype(
@@ -362,3 +374,185 @@ class TestLossIsOnTheTrainingDevice:
             small, tmp_path / "patches", out_dir=tmp_path / "out",
             model_names=(MODEL_PLAIN,), device="cuda",
         )
+
+
+# --------------------------------------------------------------------------- #
+# Channel scaling -- the defect that produced a null result on real data
+# --------------------------------------------------------------------------- #
+class TestChannelScaling:
+    """This stack spans four orders of magnitude, and raw it collapses.
+
+    Reflectance sits near 0.2, the indices at +/-1, slope 0-90 and the DEM in
+    the THOUSANDS. Fed raw to the first convolution the DEM dominates and the
+    network predicts the majority class everywhere.
+
+    Measured on real Landslide4Sense data with no scaling: landslide IoU 0.0
+    from BOTH models with bit-identical metrics -- two different
+    architectures cannot agree to sixteen decimal places unless both have
+    collapsed. On synthetic data at realistic scales, standardisation alone
+    took landslide IoU from 0.127 to 0.769.
+
+    The earlier fixtures could not catch this: they drew every band from
+    ``normal(0.2, 0.08)``, which is already well scaled. The fixture here
+    uses realistic per-channel scales for that reason.
+    """
+
+    #: Realistic scales, which is the whole point of this fixture.
+    SCALES = {
+        "DEM": (2900.0, 350.0),
+        "SLOPE": (28.0, 14.0),
+    }
+
+    def _realistic_patches(self, directory, cfg: Config, n: int = 12):
+        from models.dataset import write_patch
+
+        rng = np.random.default_rng(0)
+        size = cfg.models.patch.size_px
+        directory.mkdir(parents=True, exist_ok=True)
+        for i in range(n):
+            bands = []
+            for name in cfg.models.channels:
+                mean, sd = self.SCALES.get(name, (0.2, 0.06))
+                bands.append(rng.normal(mean, sd, (size, size)))
+            y = np.zeros((size, size), dtype=np.uint8)
+            y[: size // 4] = 2
+            # Spread over several geographic blocks, or the split has
+            # nothing to partition and training refuses to start.
+            block = cfg.models.split.block_km * 1000.0
+            write_patch(
+                directory / f"p_{i:03d}.npz",
+                np.stack(bands, axis=0).astype("float32"), y,
+                cfg.models.channels,
+                x_m=float((i // 3) * block + block / 2 + (i % 3) * 100),
+                y_m=block / 2,
+                event=f"ev-{i}",
+            )
+        return directory
+
+    def test_statistics_come_from_the_training_split_only(
+        self, cfg: Config, tmp_path
+    ) -> None:
+        """Statistics over every patch would leak the test distribution.
+
+        That is the same class of leak as a random patch split, and just as
+        invisible in the output.
+        """
+        from models.dataset import (
+            assign_splits, channel_statistics, discover_patches,
+        )
+
+        small = tiny(cfg)
+        self._realistic_patches(tmp_path / "patches", small, n=12)
+        refs = discover_patches(tmp_path / "patches")
+        splits = assign_splits(refs, small)
+
+        train_only = channel_statistics(splits["train"], small)
+        everything = channel_statistics(refs, small)
+        assert train_only.patches == len(splits["train"])
+        assert train_only.patches < len(refs)
+        assert train_only.as_dict() != everything.as_dict()
+
+    def test_scaling_brings_the_channels_together(
+        self, cfg: Config, tmp_path
+    ) -> None:
+        """The DEM channel must stop dominating."""
+        from models.dataset import channel_statistics, discover_patches
+
+        small = tiny(cfg)
+        self._realistic_patches(tmp_path / "patches", small, n=6)
+        refs = discover_patches(tmp_path / "patches")
+        stats = channel_statistics(refs, small)
+
+        raw_spread = max(abs(m) for m in stats.mean) / min(
+            abs(m) for m in stats.mean
+        )
+        assert raw_spread > 1000, "fixture is not realistically scaled"
+
+        with np.load(refs[0].path, allow_pickle=True) as data:
+            scaled = stats.apply(data["x"])
+        per_channel = scaled.reshape(scaled.shape[0], -1)
+        assert np.abs(per_channel.mean(axis=1)).max() < 0.5
+        assert np.abs(per_channel.std(axis=1) - 1.0).max() < 0.5
+
+    def test_a_constant_channel_does_not_become_nan(
+        self, cfg: Config, tmp_path
+    ) -> None:
+        """A zero standard deviation would poison every gradient silently."""
+        from models.dataset import channel_statistics, discover_patches, write_patch
+
+        small = tiny(cfg)
+        size = small.models.patch.size_px
+        x = np.zeros((small.models.in_channels, size, size), dtype="float32")
+        x[0] = 7.0  # constant
+        write_patch(
+            tmp_path / "p.npz", x,
+            np.zeros((size, size), dtype=np.uint8), small.models.channels,
+            x_m=0.0, y_m=0.0,
+        )
+        refs = discover_patches(tmp_path)
+        stats = channel_statistics(refs, small)
+        with np.load(refs[0].path, allow_pickle=True) as data:
+            scaled = stats.apply(data["x"])
+        assert np.isfinite(scaled).all()
+
+    def test_statistics_are_stored_in_the_checkpoint(
+        self, cfg: Config, tmp_path
+    ) -> None:
+        """Inference must apply exactly what training saw."""
+        small = tiny(cfg)
+        self._realistic_patches(tmp_path / "patches", small, n=12)
+        report = compare_models(
+            small, tmp_path / "patches", out_dir=tmp_path / "out",
+            model_names=(MODEL_PLAIN,), device="cpu",
+        )
+        run = report["runs"][MODEL_PLAIN]
+        assert run["channel_statistics"] is not None
+        payload = torch.load(run["checkpoint"], map_location="cpu")
+        assert payload["statistics"] is not None
+        assert payload["normalisation"] == small.models.normalisation
+
+    def test_inference_refuses_to_run_unscaled(self, cfg: Config) -> None:
+        """A model trained scaled, applied raw, returns confident nonsense."""
+        small = tiny(cfg)
+        model = build_model(small, MODEL_PLAIN)
+        with pytest.raises(PredictionError, match="no channel statistics"):
+            predict_stack(
+                model,
+                np.ones((small.models.in_channels, 40, 40), "float32"),
+                small, device="cpu",
+            )
+
+    def test_nodata_is_found_before_scaling_not_after(
+        self, cfg: Config
+    ) -> None:
+        """The ordering bug: scaling maps all-zero pixels away from zero.
+
+        Detecting nodata after standardisation finds nothing, so a scene edge
+        is classified instead of marked unseen -- the failure recorded in
+        docs/validation.md 24, Finding 4a.
+        """
+        from models.dataset import ChannelStatistics
+
+        small = tiny(cfg)
+        model = build_model(small, MODEL_PLAIN)
+        n = small.models.in_channels
+        # Statistics whose mean is far from zero, so a zero pixel does NOT
+        # remain zero after scaling.
+        stats = ChannelStatistics(
+            channels=tuple(small.models.channels),
+            mean=tuple([500.0] * n),
+            sd=tuple([10.0] * n),
+            patches=1,
+        )
+        stack = np.full((n, 40, 48), 500.0, dtype="float32")
+        stack[:, :10, :] = 0.0          # a nodata band
+
+        result = predict_stack(
+            model, stack, small, statistics=stats, tile_px=32, overlap_px=8,
+            device="cpu",
+        )
+        assert result.unseen_pixels == 10 * 48, (
+            "nodata was detected after scaling, so the all-zero rows were "
+            "classified instead of marked unseen"
+        )
+        assert (result.classes[:10, :] == small.models.ignore_index).all()

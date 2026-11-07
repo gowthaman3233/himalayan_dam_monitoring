@@ -305,6 +305,26 @@ models:
     - ILLUMINATION
     - TERRAIN_SHADOW
 
+  # How to scale the input channels before they reach the network.
+  #
+  # This stack spans FOUR ORDERS OF MAGNITUDE: reflectance near 0.2, indices
+  # at +/-1, slope 0-90, and DEM in the thousands. Fed raw to the first
+  # convolution, the DEM channel dominates and the network collapses to the
+  # majority class.
+  #
+  # Measured on real Landslide4Sense data with no normalisation: landslide
+  # IoU 0.0 from BOTH models, with bit-identical metrics -- the signature of
+  # two different architectures both predicting background everywhere. On
+  # synthetic data at realistic scales, standardisation alone took landslide
+  # IoU from 0.127 to 0.769 with nothing else changed.
+  #
+  # Statistics come from the TRAINING SPLIT ONLY -- computing them over all
+  # patches would leak the test distribution into the model -- and are stored
+  # in the checkpoint so inference applies exactly what training saw.
+  #
+  # "none" is for data that is already scaled.
+  normalisation: per_channel_zscore
+
   patch:
     size_px: 256            # brief, Section 7.5
     # Below size_px the patches overlap, which augments a small hand-labelled
