@@ -363,6 +363,28 @@ def train(
         for x, y in loader:
             optimiser.zero_grad()
             loss = criterion(model(x.to(dev)), y.to(dev))
+
+            # Stop on a non-finite loss instead of training through it.
+            #
+            # One NaN in the input turns every weight NaN on the first step,
+            # after which argmax over all-NaN logits returns index 0 and the
+            # model predicts the first class everywhere. Left unchecked that
+            # runs the full schedule and reports a complete-looking result:
+            # bit-identical metrics from both architectures, one class at
+            # 0.00 IoU, and no improvement past epoch 1. A null result in the
+            # clothes of a real one is worse than a crash.
+            if not torch.isfinite(loss):
+                raise TrainingError(
+                    f"the loss became {loss.item()} at epoch {epoch}. "
+                    f"Training through this would produce a confident, "
+                    f"meaningless result rather than an error. The usual "
+                    f"cause is a non-finite input -- a normalised index is "
+                    f"NaN where its denominator vanishes -- which "
+                    f"PatchDataset neutralises, so look for an "
+                    f"unneutralised source or an exploding learning rate "
+                    f"(currently {settings.learning_rate})."
+                )
+
             loss.backward()
             optimiser.step()
             total += float(loss.item())

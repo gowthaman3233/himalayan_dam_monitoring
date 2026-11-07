@@ -486,6 +486,7 @@ class PatchDataset:
         self.verify_channels = verify_channels
         self._expected = list(self.settings.channels)
         self.statistics = statistics
+        self._non_finite_patches = 0
         if (
             statistics is not None
             and list(statistics.channels) != self._expected
@@ -533,7 +534,61 @@ class PatchDataset:
             self._check(ref.path, channels, x)
         if self.statistics is not None and self.settings.normalisation != "none":
             x = self.statistics.apply(x)
+        x, y = self._handle_non_finite(ref.path, x, y)
         return torch.from_numpy(x), torch.from_numpy(y.astype(np.int64))
+
+    def _handle_non_finite(
+        self, path: Path, x: np.ndarray, y: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Replace non-finite inputs and stop training on those pixels.
+
+        A normalised difference index is **NaN where its denominator
+        vanishes**, which is correct for the detection pipeline: NaN there
+        means "unmeasurable", and the shadow-rejection fusion treats it as
+        absent evidence rather than as a value. A neural network has no such
+        notion.
+
+        One NaN is catastrophic and silent. Measured on this project's own
+        baseline: a single NaN among 22,528 input values turned **all
+        7,852,037 weights to NaN on the first optimiser step**, after which
+        ``argmax`` over all-NaN logits returns index 0 and the model predicts
+        the first class everywhere. That is exactly what a real Landslide4Sense
+        run produced -- both architectures reporting bit-identical metrics,
+        landslide IoU 0.0, and no improvement past epoch 1.
+
+        So two things happen here, and the second matters as much as the first:
+
+        * the input value becomes **0.0**, which after standardisation is the
+          channel mean -- the least informative value available, rather than a
+          number the model could learn from;
+        * the pixel's label becomes ``ignore_index``, so it contributes nothing
+          to the loss. Replacing the input alone would train the model to
+          predict a real class for ground it has no measurement of.
+        """
+        finite = np.isfinite(x)
+        if finite.all():
+            return x, y
+
+        bad = ~finite.all(axis=0)          # any channel non-finite at a pixel
+        x = np.where(finite, x, 0.0).astype(np.float32)
+        y = np.asarray(y).copy()
+        y[bad] = self.settings.ignore_index
+
+        self._non_finite_patches += 1
+        if self._non_finite_patches <= 3:
+            log.warning(
+                "%s has %d pixel(s) with a non-finite channel (a normalised "
+                "index is NaN where its denominator vanishes). Their inputs "
+                "are set to 0 and their labels to ignore_index: one NaN "
+                "reaching the loss turns every weight NaN on the first step",
+                path.name, int(bad.sum()),
+            )
+        elif self._non_finite_patches == 4:
+            log.warning(
+                "further patches with non-finite channels will not be "
+                "logged individually"
+            )
+        return x, y
 
     # -- reporting ---------------------------------------------------------- #
 
