@@ -298,3 +298,67 @@ class TestInferenceNeverInventsObservations:
                                device="cpu")
         assert result.classes.shape == (77, 93)
         assert (result.classes != small.models.ignore_index).all()
+
+
+# --------------------------------------------------------------------------- #
+# Class weights must live on the training device
+# --------------------------------------------------------------------------- #
+class TestLossIsOnTheTrainingDevice:
+    """A CPU weight tensor against CUDA batches fails mid-epoch.
+
+    This escaped every earlier test because it needs TWO conditions at once:
+    `class_weights` set, and a non-CPU device. The default config has
+    `class_weights: null`, and the tests run on CPU, so neither alone trips
+    it. It surfaced on the first real GPU run, from the Landslide4Sense
+    overlay, as "Expected all tensors to be on the same device" after the
+    download, conversion and split had all succeeded.
+
+    These tests need no GPU: they assert the weight tensor lands on whatever
+    device was asked for, which is the property that was missing.
+    """
+
+    def _weighted(self, cfg: Config) -> Config:
+        data = cfg.model_dump(mode="python")
+        data["models"]["training"]["class_weights"] = [
+            1.0, 1.0, 5.0, 1.0, 1.0
+        ]
+        return Config.model_validate(data)
+
+    def test_the_weight_tensor_follows_the_requested_device(
+        self, cfg: Config
+    ) -> None:
+        from models.train import _loss_fn
+
+        device = torch.device("cpu")
+        criterion = _loss_fn(self._weighted(cfg), device)
+        assert criterion.weight is not None
+        assert criterion.weight.device == device
+
+    def test_an_unweighted_loss_carries_no_tensor(self, cfg: Config) -> None:
+        """Nothing to misplace, which is why the bug hid for so long."""
+        from models.train import _loss_fn
+
+        criterion = _loss_fn(cfg, torch.device("cpu"))
+        assert criterion.weight is None
+
+    def test_a_weighted_run_trains(self, cfg: Config, tmp_path) -> None:
+        """End to end with weights set, which is the Route A configuration."""
+        small = tiny(self._weighted(cfg))
+        patch_set(tmp_path / "patches", small)
+        report = compare_models(
+            small, tmp_path / "patches", out_dir=tmp_path / "out",
+            model_names=(MODEL_PLAIN,), device="cpu",
+        )
+        assert report["runs"][MODEL_PLAIN]["epochs_run"] >= 1
+
+    @pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="no CUDA device available here"
+    )
+    def test_a_weighted_run_trains_on_cuda(self, cfg: Config, tmp_path) -> None:
+        """The exact combination that failed. Skipped without a GPU."""
+        small = tiny(self._weighted(cfg))
+        patch_set(tmp_path / "patches", small)
+        compare_models(
+            small, tmp_path / "patches", out_dir=tmp_path / "out",
+            model_names=(MODEL_PLAIN,), device="cuda",
+        )

@@ -145,7 +145,17 @@ def build_model(cfg: "Config", name: str) -> "torch.nn.Module":
     return AttentionUNet(in_channels=channels, num_classes=classes)
 
 
-def _loss_fn(cfg: "Config") -> "torch.nn.Module":
+def _loss_fn(
+    cfg: "Config", device: "torch.device | None" = None
+) -> "torch.nn.Module":
+    """The loss, with any class weights built on the training device.
+
+    ``device`` is not optional in practice. A weight tensor left on the CPU
+    while the model and batches are on CUDA raises mid-epoch with "Expected
+    all tensors to be on the same device", which is a confusing way to
+    discover a one-line omission -- and it only happens when class_weights is
+    set, so an unweighted run passes and a weighted one fails.
+    """
     import torch
     import torch.nn as nn
 
@@ -156,7 +166,7 @@ def _loss_fn(cfg: "Config") -> "torch.nn.Module":
                 f"class_weights has {len(weights)} entries but there are "
                 f"{cfg.models.num_classes} classes"
             )
-        tensor = torch.tensor(weights, dtype=torch.float32)
+        tensor = torch.tensor(weights, dtype=torch.float32, device=device)
         log.info("loss is class-weighted: %s", weights)
     else:
         tensor = None
@@ -303,7 +313,7 @@ def train(
         )
 
     model = build_model(cfg, model_name).to(dev)
-    criterion = _loss_fn(cfg)
+    criterion = _loss_fn(cfg, dev).to(dev)
     optimiser = torch.optim.Adam(
         model.parameters(),
         lr=settings.learning_rate,
