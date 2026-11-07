@@ -1,0 +1,22 @@
+{
+  "source_geojson": "baige_2018_blockage_candidates.geojson",
+  "source_run": "unfused; used for the spatial pattern only",
+  "candidates": 14,
+  "nearest_neighbour_m": {
+    "min": 78.2,
+    "median": 420.2,
+    "max": 620.2
+  },
+  "clusters_by_merge_distance": {
+    "100": 13,
+    "200": 11,
+    "300": 11,
+    "500": 8,
+    "1000": 3,
+    "2000": 1
+  },
+  "accumulation_range_cells": [
+    518.0,
+    333301.0
+  ]
+}

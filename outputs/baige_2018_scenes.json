@@ -1,0 +1,240 @@
+{
+  "aoi": "Baige landslide dam, Jinsha River, Jiangda County, Tibet",
+  "aoi_source": "31 deg 04' 56.41\" N, 98 deg 42' 17.98\" E -- right bank of the Jinsha River, Jiangda County, Tibet Autonomous Region, on the Tibet-Sichuan border. Two successive landslide dams, 2018-10-10 and 2018-11-03; the second impounded a lake reported at 105e6 m^3, released through an engineered channel on 2018-11-13. Sources (see docs/validation.md 2.2): \"Study on successive landslide damming events of Jinsha River in Baige village on October 11 and November 3, 2018\", Journal of Engineering Geology; \"Hydro-sediment-morphodynamic processes of the Baige landslide-induced barrier lake, Jinsha River, China\", Journal of Hydrology; \"Using a single remote-sensing image to calculate the height of a landslide dam and the maximum volume of a lake\", NHESS 22, 2081-2098, 2022. Published volume figures CONFLICT across sources (105 vs 500 vs 775 e6 m^3) and must be quoted as a range, never as a single number.",
+  "window": [
+    "2018-09-01",
+    "2018-11-30"
+  ],
+  "event_dates": {
+    "first_dam": "2018-10-10",
+    "second_dam": "2018-11-03",
+    "engineered_release": "2018-11-13"
+  },
+  "scenes": [
+    {
+      "sensor": "S2",
+      "date": "2018-11-02",
+      "tile": "47RMQ",
+      "cloud_percent": 0.0,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181102T040919_20181102T040950_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-09",
+      "tile": "47RMQ",
+      "cloud_percent": 0.040963,
+      "phase": "POST dam 2, lake impounded",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181109T035949_20181109T035951_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-09",
+      "tile": "47RMQ",
+      "cloud_percent": 0.017344,
+      "phase": "POST dam 2, lake impounded",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181109T035949_20181109T040939_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-19",
+      "tile": "47RMQ",
+      "cloud_percent": 3.152785,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181119T040039_20181119T040250_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-22",
+      "tile": "47RMQ",
+      "cloud_percent": 3e-06,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181122T041059_20181122T041858_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-27",
+      "tile": "47RMQ",
+      "cloud_percent": 0.250235,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181127T041111_20181127T041642_T47RMQ"
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-29",
+      "tile": "47RMQ",
+      "cloud_percent": 0.01507,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S2_SR_HARMONIZED/20181129T040119_20181129T040113_T47RMQ"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-04",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180904T232050_20180904T232115_023555_0290BF_C85F"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-09",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180909T112510_20180909T112535_023621_0292EE_AE95"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-16",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180916T232050_20180916T232115_023730_02965C_0B72"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-21",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180921T112511_20180921T112536_023796_029890_6709"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-21",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180921T232859_20180921T232924_023803_0298D1_5910"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-09-28",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20180928T232051_20180928T232116_023905_029C09_2C82"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-03",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181003T112511_20181003T112536_023971_029E46_1361"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-03",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "PRE (before the first dam)",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181003T232859_20181003T232924_023978_029E84_9A7E"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-10",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181010T232051_20181010T232116_024080_02A1C7_1B0C"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-15",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181015T112511_20181015T112536_024146_02A3FF_5D3E"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-15",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181015T232900_20181015T232925_024153_02A43E_7E1A"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-22",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181022T232051_20181022T232116_024255_02A77B_2ECA"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-27",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181027T112511_20181027T112536_024321_02A99F_2127"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-27",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "between dam 1 and dam 2",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181027T232900_20181027T232925_024328_02A9DD_77B3"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-03",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "POST dam 2, lake impounded",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181103T232051_20181103T232116_024430_02AD5A_CCF2"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-08",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "POST dam 2, lake impounded",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181108T112511_20181108T112536_024496_02AFB8_E46A"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-08",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "POST dam 2, lake impounded",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181108T232900_20181108T232925_024503_02B001_A7DD"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-15",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181115T232051_20181115T232116_024605_02B3C2_835E"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-20",
+      "orbit_pass": "ASCENDING",
+      "relative_orbit": 99,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181120T112511_20181120T112536_024671_02B62D_4E30"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-20",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 106,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181120T232859_20181120T232924_024678_02B674_83E8"
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-27",
+      "orbit_pass": "DESCENDING",
+      "relative_orbit": 33,
+      "phase": "after the engineered release",
+      "ee_image_id": "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20181127T232050_20181127T232115_024780_02BA38_E705"
+    }
+  ],
+  "value_type": "observed"
+}

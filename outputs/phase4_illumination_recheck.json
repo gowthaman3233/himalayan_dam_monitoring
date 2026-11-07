@@ -1,0 +1,20 @@
+{
+  "question": "whether the Phase 4 gate result used a valid illumination layer, given cos_incidence could die silently at this size",
+  "grid": [
+    799,
+    797
+  ],
+  "sun_azimuth_deg": 157.498367628114,
+  "sun_zenith_deg": 39.9434684067214,
+  "max_abs_difference": 2.220446049250313e-16,
+  "mean_abs_difference": 3.375649046730865e-17,
+  "identical_to_1e9": true,
+  "mask_agreement": {
+    "terrain_shadow": 1.0,
+    "self_shadow": 1.0,
+    "cast_shadow": 1.0
+  },
+  "phase4_false_water_reduction": 0.8748,
+  "phase4_reference_retained": 0.9644,
+  "verdict": "Phase 4's gate result is unaffected: the stored illumination matches the fixed implementation exactly. The BLAS failure kills the process rather than corrupting values, so a completed run cannot have hit it."
+}

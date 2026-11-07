@@ -1,0 +1,14 @@
+{
+  "2018-11-09": {
+    "footprint_observable": 1.0,
+    "wet_fraction_of_observable": 1.0
+  },
+  "2018-11-19": {
+    "footprint_observable": 1.0,
+    "wet_fraction_of_observable": 0.6953
+  },
+  "2018-11-22": {
+    "footprint_observable": 1.0,
+    "wet_fraction_of_observable": 0.7087
+  }
+}

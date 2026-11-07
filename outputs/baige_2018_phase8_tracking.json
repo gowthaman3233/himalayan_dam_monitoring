@@ -1,0 +1,210 @@
+{
+  "lake_bound": {
+    "default_largest_m2": 160000.0,
+    "touches_aoi_edge": false,
+    "boundary_px": 0,
+    "upstream_search_sweep": [
+      {
+        "upstream_search_m": 500.0,
+        "lakes": 2,
+        "largest_m2": 2600.0,
+        "total_m2": 4000.0,
+        "largest_on_aoi_edge_px": 0
+      },
+      {
+        "upstream_search_m": 1000.0,
+        "lakes": 4,
+        "largest_m2": 54300.0,
+        "total_m2": 61100.0,
+        "largest_on_aoi_edge_px": 0
+      },
+      {
+        "upstream_search_m": 2000.0,
+        "lakes": 4,
+        "largest_m2": 160000.0,
+        "total_m2": 166800.0,
+        "largest_on_aoi_edge_px": 0
+      },
+      {
+        "upstream_search_m": 3000.0,
+        "lakes": 4,
+        "largest_m2": 339300.0,
+        "total_m2": 346100.0,
+        "largest_on_aoi_edge_px": 0
+      },
+      {
+        "upstream_search_m": 5000.0,
+        "lakes": 4,
+        "largest_m2": 394900.0,
+        "total_m2": 401700.0,
+        "largest_on_aoi_edge_px": 40
+      }
+    ],
+    "all_water_post_date_m2": 871800.0
+  },
+  "main_stem": {
+    "ND-005": {
+      "accumulation_median_cells": 2581.0,
+      "accumulation_max_cells": 135855.0,
+      "dem_median_m": 2868.5
+    },
+    "ND-004": {
+      "accumulation_median_cells": 1671.0,
+      "accumulation_max_cells": 174278.0,
+      "dem_median_m": 2838.3
+    },
+    "ND-007": {
+      "accumulation_median_cells": 20855.5,
+      "accumulation_max_cells": 56484.0,
+      "dem_median_m": 2870.1
+    }
+  },
+  "main_stem_max_accumulation_cells": 334834.0,
+  "timeline": [
+    {
+      "date": "2018-11-02",
+      "scene": "S2_47RMQ_20181102T041940",
+      "observable_fraction": 1.0,
+      "water_px": 8045,
+      "lake_count": 0,
+      "total_lake_area_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "events": []
+    },
+    {
+      "date": "2018-11-09",
+      "scene": "S2_47RMQ_20181109T040948",
+      "observable_fraction": 0.5981,
+      "water_px": 8718,
+      "lake_count": 4,
+      "total_lake_area_m2": 166800.0,
+      "largest_lake_m2": 160000.0,
+      "events": [
+        {
+          "kind": "appeared",
+          "lake_id": "BL-001",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-002",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-003",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-004",
+          "related_ids": [],
+          "reason": null
+        }
+      ]
+    },
+    {
+      "date": "2018-11-19",
+      "scene": "S2_47RMQ_20181119T040944",
+      "observable_fraction": 0.6091,
+      "water_px": 10982,
+      "lake_count": 3,
+      "total_lake_area_m2": 294000.0,
+      "largest_lake_m2": 291500.0,
+      "events": [
+        {
+          "kind": "appeared",
+          "lake_id": "BL-005",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-006",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-007",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "repartitioned",
+          "lake_id": "BL-001",
+          "related_ids": [],
+          "reason": "no qualifying lake matched this footprint, but 41% of it still holds water (at or above the 10% threshold), so this is a re-partitioned water body and NOT a disappearance"
+        },
+        {
+          "kind": "disappeared",
+          "lake_id": "BL-002",
+          "related_ids": [],
+          "reason": "100% of the last known footprint was observable and only 4% of it still holds water"
+        },
+        {
+          "kind": "repartitioned",
+          "lake_id": "BL-003",
+          "related_ids": [],
+          "reason": "no qualifying lake matched this footprint, but 65% of it still holds water (at or above the 10% threshold), so this is a re-partitioned water body and NOT a disappearance"
+        },
+        {
+          "kind": "disappeared",
+          "lake_id": "BL-004",
+          "related_ids": [],
+          "reason": "100% of the last known footprint was observable and only 0% of it still holds water"
+        }
+      ]
+    },
+    {
+      "date": "2018-11-22",
+      "scene": "S2_47RMQ_20181122T041940",
+      "observable_fraction": 1.0,
+      "water_px": 10226,
+      "lake_count": 2,
+      "total_lake_area_m2": 292400.0,
+      "largest_lake_m2": 290400.0,
+      "events": [
+        {
+          "kind": "continued",
+          "lake_id": "BL-005",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "appeared",
+          "lake_id": "BL-008",
+          "related_ids": [],
+          "reason": null
+        },
+        {
+          "kind": "repartitioned",
+          "lake_id": "BL-001",
+          "related_ids": [],
+          "reason": "no qualifying lake matched this footprint, but 76% of it still holds water (at or above the 10% threshold), so this is a re-partitioned water body and NOT a disappearance"
+        },
+        {
+          "kind": "repartitioned",
+          "lake_id": "BL-003",
+          "related_ids": [],
+          "reason": "no qualifying lake matched this footprint, but 35% of it still holds water (at or above the 10% threshold), so this is a re-partitioned water body and NOT a disappearance"
+        },
+        {
+          "kind": "disappeared",
+          "lake_id": "BL-006",
+          "related_ids": [],
+          "reason": "100% of the last known footprint was observable and only 8% of it still holds water"
+        },
+        {
+          "kind": "disappeared",
+          "lake_id": "BL-007",
+          "related_ids": [],
+          "reason": "100% of the last known footprint was observable and only 0% of it still holds water"
+        }
+      ]
+    }
+  ]
+}

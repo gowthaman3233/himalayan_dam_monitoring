@@ -1,0 +1,197 @@
+{
+  "phase": 3,
+  "deliverable": "rule-based water detection (optical + SAR)",
+  "disclaimer": "Research prototype output. Not an official warning. Verify with authoritative sources.",
+  "config_hash": "1449b4ce8a122ef700e4e086de35c4789070c0a06ab15b452657881c7417425b",
+  "aoi": {
+    "name": "Tsho Rolpa, Rolwaling Valley, Dolakha, Nepal",
+    "kind": "point",
+    "source": "27 deg 52' N, 86 deg 28' E (= 27.867 N, 86.467 E), 4546 m a.s.l. -- Kayastha, R. B. and Maskey, S. (2024), \"Glacial lake outburst flood (GLOF) modeling of Tsho Rolpa glacial lake, Nepal\", Proc. IAHS 387, 59-63, doi:10.5194/piahs-387-59-2024. Concordant with Shrestha, B. B. and Nakagawa, H. (2014), \"Assessment of potential outburst floods from the Tsho Rolpa glacial lake in Nepal\", Natural Hazards 71(2), which gives 27.867 N / 86.467 E, surface area 1.537 km^2, max length 3.45 km, max width 0.5 km, elevation 4580 m."
+  },
+  "input_stack": {
+    "path": "data/processed/stack_tsho_rolpa.tif",
+    "grid": "797x799 @ 10.0 m, EPSG:32645",
+    "run_id_of_stack": "20261003T164345Z-412ba3",
+    "s2_scene": "S2_45RVL_20231019T050106_refl.tif",
+    "s1_descending": "S1 DESC despeckled",
+    "s1_ascending": "S1 ASC despeckled"
+  },
+  "valid_pixels": {
+    "total": 636803,
+    "optically_valid": 592221,
+    "optically_valid_fraction": 0.93,
+    "note": "cloud, cloud shadow and defective pixels are invalid, not dry"
+  },
+  "optical": {
+    "rule": "both_and",
+    "method": "both_and (NDWI > 0.0, MNDWI > 0.0), NIR < 0.11 reflectance (snow screen)",
+    "value_type": "classified",
+    "index_only": {
+      "pixels": 185417,
+      "area_km2": 18.5417,
+      "dem_wbm_recall": 0.979,
+      "fraction_scl_snow_ice": 0.6748,
+      "fraction_in_terrain_shadow": 0.2862
+    },
+    "after_snow_screen": {
+      "pixels": 26826,
+      "area_km2": 2.6826,
+      "dem_wbm_recall": 0.9567,
+      "fraction_scl_snow_ice": 0.0561,
+      "fraction_in_terrain_shadow": 0.2055
+    },
+    "snow_screen": {
+      "nir_max_reflectance": 0.11,
+      "citation": "Hall et al. 1995; Hall et al. 2002",
+      "pixels_removed": 158591,
+      "fraction_of_index_only_removed": 0.8553
+    },
+    "ndwi_water_fraction": 0.3011,
+    "mndwi_water_fraction": 0.5062
+  },
+  "sar": {
+    "band": "VV",
+    "threshold_method": "tiled_otsu",
+    "per_orbit": {
+      "descending": {
+        "available": true,
+        "value_type": "derived",
+        "threshold_db": -10.418,
+        "tiles_tested": 49,
+        "tiles_accepted": 33,
+        "separation": 2.589,
+        "min_separation": 2.0,
+        "fitted_modes_db": [
+          -21.36,
+          -6.99
+        ],
+        "reason": null
+      },
+      "ascending": {
+        "available": true,
+        "value_type": "derived",
+        "threshold_db": -7.794,
+        "tiles_tested": 49,
+        "tiles_accepted": 35,
+        "separation": 2.421,
+        "min_separation": 2.0,
+        "fitted_modes_db": [
+          -12.47,
+          -1.54
+        ],
+        "reason": null
+      }
+    },
+    "mask_used": "descending",
+    "result": {
+      "pixels": 286706,
+      "area_km2": 28.6706,
+      "dem_wbm_recall": 0.9746,
+      "fraction_scl_snow_ice": 0.4655,
+      "fraction_in_terrain_shadow": 0.2294
+    },
+    "available": true,
+    "geometry_diagnostic": {
+      "note": "Diagnostic only -- the layover/shadow mask is NOT applied to the Phase 3 SAR mask; interpreting SAR water inside it is Phase 4's job (brief 7.3)",
+      "aoi_fraction_layover_or_shadow": 0.2722,
+      "sar_water_fraction_inside_it": 0.4231,
+      "sar_water_also_optical_water": 0.0783
+    }
+  },
+  "combined": {
+    "combine": "intersection",
+    "value_type": "classified",
+    "result": {
+      "pixels": 23735,
+      "area_km2": 2.3735,
+      "dem_wbm_recall": 0.9561,
+      "fraction_scl_snow_ice": 0.0447,
+      "fraction_in_terrain_shadow": 0.1565
+    },
+    "agreement_optical_vs_sar": {
+      "mutually_valid_px": 592221.0,
+      "optical_only_px": 3091.0,
+      "sar_only_px": 262971.0,
+      "both_px": 23735.0,
+      "iou": 0.0819021590975752
+    }
+  },
+  "water_bodies": {
+    "min_area_m2": 1000.0,
+    "connectivity": 8,
+    "count": 95,
+    "index_only_count": 281,
+    "value_type": "derived",
+    "largest": {
+      "body_id": 1,
+      "area_m2": 1577600.0,
+      "area_km2": 1.5776,
+      "perimeter_m": 11800.0,
+      "pixel_count": 15776,
+      "centroid_lon": 86.47691,
+      "centroid_lat": 27.86062,
+      "mean_nir_reflectance": 0.0628,
+      "mean_elevation_m": 4547.2,
+      "inside_dem_wbm_fraction": 0.9394
+    },
+    "largest_index_only_area_km2": 6.8211,
+    "top_5_area_km2": [
+      1.5776,
+      0.1041,
+      0.0714,
+      0.0589,
+      0.0455
+    ]
+  },
+  "reference": {
+    "dem_wbm_area_km2": 1.5501,
+    "dem_wbm_note": "Copernicus GLO-30 water-body mask, epoch 2011-01-05 to 2014-09-08: an independent observation of the lake surface, not ground truth",
+    "published_area_km2": 1.537,
+    "published_source": "Shrestha, B. B. & Nakagawa, H. (2014), Natural Hazards 71(2) -- surface area 1.537 km^2; predates these 2023 scenes"
+  },
+  "combination_rules": {
+    "optical": {
+      "area_km2": 2.6826,
+      "bodies": 102,
+      "largest_km2": 1.6005,
+      "dem_wbm_recall": 0.9567,
+      "fraction_scl_snow_ice": 0.0561,
+      "fraction_in_sar_layover_shadow": 0.1028,
+      "is_default": false
+    },
+    "sar": {
+      "area_km2": 30.2992,
+      "bodies": 219,
+      "largest_km2": 12.8679,
+      "dem_wbm_recall": 0.9844,
+      "fraction_scl_snow_ice": 0.443,
+      "fraction_in_sar_layover_shadow": 0.4231,
+      "is_default": false
+    },
+    "union": {
+      "area_km2": 30.6083,
+      "bodies": 224,
+      "largest_km2": 13.0406,
+      "dem_wbm_recall": 0.985,
+      "fraction_scl_snow_ice": 0.4399,
+      "fraction_in_sar_layover_shadow": 0.4196,
+      "is_default": false
+    },
+    "intersection": {
+      "area_km2": 2.3735,
+      "bodies": 95,
+      "largest_km2": 1.5776,
+      "dem_wbm_recall": 0.9561,
+      "fraction_scl_snow_ice": 0.0447,
+      "fraction_in_sar_layover_shadow": 0.1063,
+      "is_default": true
+    }
+  },
+  "findings": [
+    "MNDWI is the same expression as NDSI (Hall et al. 1995), so it scores snow as water by construction. Index-only MNDWI over this AOI selects 32.2 km^2, 74% of it SCL snow/ice, merging the lake into a 13.3 km^2 glacier blob.",
+    "The MODIS water/snow discriminator (NIR < 0.11 reflectance) removes 85.5% of index-only water pixels and brings the largest body to 1.601 km^2 against a published 1.537 km^2, while still recovering 95.7% of the independent DEM-epoch water-body mask.",
+    "Single-scene Sentinel-1 amplitude thresholding does not work in this terrain: it selects 47.6% of the AOI as water, 42.3% of which lies inside the radar layover/shadow mask. Deriving the threshold from reliable pixels only does not fix it (-8.46 dB, still 37.5% of the AOI), so the problem is radiometric, not just geometric. This is an open design input to Phase 4.",
+    "A separation statistic computed by hard-splitting a sample at its threshold is inflated by truncation: a single Gaussian scores 2.67, clearing the >= 2 criterion. The two modes are therefore fitted by EM, which scores the same sample 0.99.",
+    "Under strong class imbalance the bimodality guard is not sufficient on its own: with 0.39% water, global Otsu still reports a separation but misplaces the threshold, selecting 43.5% of the image. Tiling fixes the placement."
+  ]
+}

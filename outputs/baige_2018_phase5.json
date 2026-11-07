@@ -1,0 +1,98 @@
+{
+  "event": "Baige landslide dam, second failure 2018-11-03",
+  "aoi": "Baige landslide dam, Jinsha River, Jiangda County, Tibet",
+  "config_hash": "cc9b44db3566df6fe1d73d9173dce67a23079d3cf42fc7d048d9d914a11a632d",
+  "optical_pair": [
+    "S2_47RMQ_20181102T041940",
+    "S2_47RMQ_20181122T041940"
+  ],
+  "sar_pair": {
+    "pre": "2018-10-27",
+    "post": "2018-11-08",
+    "relative_orbit": 99,
+    "orbit_pass": "ASCENDING"
+  },
+  "note_first_dam": "The first dam (2018-10-10) is not attempted: no Sentinel-2 scene in the window passes the cloud filter before it, so no pre-event optical baseline exists.",
+  "runs": [
+    {
+      "label": "cited slope gate (Notti et al. 2023: >15\u00b0)",
+      "min_slope_deg": 15.0,
+      "changed_px": 6355,
+      "changed_km2": 0.6355,
+      "assessable_px": 265267,
+      "polygons": 125,
+      "largest_area_m2": 14500.0,
+      "total_area_m2": 280400.0,
+      "signals": {
+        "ndvi_drop": {
+          "method": "NDVIvar <= -0.15 (Notti et al. 2023)",
+          "threshold": -0.15,
+          "available_px": 265267.0,
+          "flagged_px": 69374.0,
+          "flagged_fraction_of_available": 0.2615251802900474
+        },
+        "brightness_increase": {
+          "method": "brightness increase >= 0.0439 (median 0.0005 + 3.0 x MAD sigma 0.0145)",
+          "threshold": 0.043906846666666575,
+          "available_px": 265267.0,
+          "flagged_px": 6995.0,
+          "flagged_fraction_of_available": 0.026369657741068434
+        },
+        "sar_change": {
+          "method": "|backscatter change| >= 4.550 dB (3.0 x MAD sigma 1.517, median -0.741)",
+          "threshold": 4.549922530165745,
+          "available_px": 265267.0,
+          "flagged_px": 7579.0,
+          "flagged_fraction_of_available": 0.028571213155047556
+        }
+      },
+      "excluded": {
+        "invalid_pre": 0.0,
+        "invalid_post": 0.0,
+        "snow_pre": 555.0,
+        "snow_post": 29785.0,
+        "slope_below_minimum": 69897.0
+      }
+    },
+    {
+      "label": "dam-tuned slope gate (>1\u00b0)",
+      "min_slope_deg": 1.0,
+      "changed_px": 7113,
+      "changed_km2": 0.7113,
+      "assessable_px": 296416,
+      "polygons": 145,
+      "largest_area_m2": 25200.0,
+      "total_area_m2": 370800.0,
+      "signals": {
+        "ndvi_drop": {
+          "method": "NDVIvar <= -0.15 (Notti et al. 2023)",
+          "threshold": -0.15,
+          "available_px": 296416.0,
+          "flagged_px": 77265.0,
+          "flagged_fraction_of_available": 0.26066406671704634
+        },
+        "brightness_increase": {
+          "method": "brightness increase >= 0.0443 (median 0.0002 + 3.0 x MAD sigma 0.0147)",
+          "threshold": 0.04426655333333336,
+          "available_px": 296416.0,
+          "flagged_px": 7714.0,
+          "flagged_fraction_of_available": 0.026024236208571735
+        },
+        "sar_change": {
+          "method": "|backscatter change| >= 4.565 dB (3.0 x MAD sigma 1.522, median -0.739)",
+          "threshold": 4.565457810250094,
+          "available_px": 296416.0,
+          "flagged_px": 8918.0,
+          "flagged_fraction_of_available": 0.030086095217532118
+        }
+      },
+      "excluded": {
+        "invalid_pre": 0.0,
+        "invalid_post": 0.0,
+        "snow_pre": 555.0,
+        "snow_post": 29785.0,
+        "slope_below_minimum": 35013.0
+      }
+    }
+  ]
+}

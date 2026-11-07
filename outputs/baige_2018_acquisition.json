@@ -1,0 +1,51 @@
+{
+  "aoi": "Baige landslide dam, Jinsha River, Jiangda County, Tibet",
+  "area_km2": 27.9,
+  "exports": [
+    {
+      "sensor": "S2",
+      "date": "2018-11-02",
+      "files": [
+        "S2_47RMQ_20181102T041940_refl.tif",
+        "S2_47RMQ_20181102T041940_qa.tif",
+        "S2_47RMQ_20181102T041940_cs.tif"
+      ]
+    },
+    {
+      "sensor": "S2",
+      "date": "2018-11-09",
+      "files": [
+        "S2_47RMQ_20181109T040948_refl.tif",
+        "S2_47RMQ_20181109T040948_qa.tif",
+        "S2_47RMQ_20181109T040948_cs.tif"
+      ]
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-10-27",
+      "files": [
+        "S1_ASC099_20181027T112511.tif"
+      ]
+    },
+    {
+      "sensor": "S1",
+      "date": "2018-11-08",
+      "files": [
+        "S1_ASC099_20181108T112511.tif"
+      ]
+    }
+  ],
+  "s1_pair": {
+    "relative_orbit": 99,
+    "orbit_pass": "ASCENDING",
+    "pre": "2018-10-27",
+    "post": "2018-11-08",
+    "note": "same relative orbit: differencing across orbits would measure viewing geometry, not surface change"
+  },
+  "dem": {
+    "files": [
+      "DEM_GLO30_v02_EPSG32647.tif"
+    ],
+    "epoch": "source_collection='COPERNICUS/DEM/GLO30_2024_1' aoi_name='Baige landslide dam, Jinsha River, Jiangda County, Tibet' earliest_acquisition=datetime.datetime(2011, 1, 30, 11, 26, 52, tzinfo=datetime.timezone.utc) latest_acquisition=datetime.datetime(2014, 9, 11, 11, 28, 25, tzinfo=datetime.timezone.utc) distinct_start_dates=('2011-01-30',) distinct_end_dates=('2014-09-11',) tile_versions_present=('02',) tile_version_selected='02' entries_intersecting_aoi=1 entries_selected=1 value_type='observed'"
+  }
+}

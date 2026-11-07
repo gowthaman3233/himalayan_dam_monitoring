@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ site.site_code }} — site report</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm;
+          @bottom-center { content: "{{ disclaimer }}"; font-size: 7.5pt; color: #52514e; }
+          @bottom-right  { content: "page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #52514e; } }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: #0b0b0b; font-size: 10pt; line-height: 1.45; }
+  h1 { font-size: 17pt; margin: 0 0 2mm 0; }
+  h2 { font-size: 12pt; margin: 7mm 0 2mm 0; border-bottom: 1px solid #d8d7d2; padding-bottom: 1mm; }
+  .sub { color: #52514e; font-size: 9pt; margin-bottom: 4mm; }
+  .level { display: inline-block; padding: 2mm 4mm; border-radius: 3px; font-weight: 600;
+           border-left: 4px solid {{ level_colour }}; background: #f4f3f0; }
+  .disclaimer { border: 1.5px solid #d03b3b; background: #fdf3f3; padding: 3mm 4mm;
+                margin: 4mm 0; font-weight: 600; }
+  .insufficient { border: 1.5px solid #fab219; background: #fffaf0; padding: 3mm 4mm; margin: 3mm 0; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm 0; }
+  th, td { text-align: left; padding: 1.6mm 2mm; border-bottom: 1px solid #e6e5e0; vertical-align: top; }
+  th { color: #52514e; font-weight: 600; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; }
+  td.q { width: 34%; font-weight: 600; }
+  .vt { font-size: 7.5pt; color: #52514e; text-transform: uppercase; letter-spacing: .04em;
+        border: 1px solid #d8d7d2; border-radius: 2px; padding: 0 1.2mm; white-space: nowrap; }
+  .vt-unavailable { color: #8a5a00; border-color: #e0b878; background: #fffaf0; }
+  .detail { color: #52514e; font-size: 9pt; }
+  .caveat { color: #8a5a00; font-size: 9pt; }
+  .muted { color: #52514e; }
+  .nowrap { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<h1>{{ site.site_code }} — {{ site.site_type }}</h1>
+<div class="sub">
+  {{ project_name }} · v{{ project_version }} · report generated {{ generated_at }}
+</div>
+
+<div class="disclaimer">{{ disclaimer }}</div>
+
+<p class="level">{{ level_symbol }} {{ level }}</p>
+{% if risk %}
+<p class="detail">
+  Indicator score {{ "%.2f"|format(risk.score) }} of 1.00{% if risk.data_coverage is not none %},
+  data coverage {{ "%.0f"|format(risk.data_coverage * 100) }}%{% endif %}.
+</p>
+{% endif %}
+
+{% if insufficient_data %}
+<div class="insufficient">
+  <b>INSUFFICIENT DATA.</b> This level rests on less than the configured minimum
+  share of the evidence. Absence of a measurement is not evidence of safety.
+</div>
+{% endif %}
+
+<h2>What is known about this site</h2>
+<table>
+  <tr><th>Question</th><th>Answer</th><th>Value type</th></tr>
+  {% for a in answers %}
+  <tr>
+    <td class="q">{{ a.question }}</td>
+    <td>
+      {{ a.value }}
+      {% if a.detail %}<div class="detail">{{ a.detail }}</div>{% endif %}
+      {% if a.caveat %}<div class="caveat">{{ a.caveat }}</div>{% endif %}
+    </td>
+    <td><span class="vt {% if a.value_type == 'unavailable' %}vt-unavailable{% endif %}">{{ a.value_type }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if factors %}
+<h2>Factors behind the indicator level</h2>
+<table>
+  <tr><th>Factor</th><th>Value</th><th>Weight</th><th>Contribution</th></tr>
+  {% for f in factors %}
+  <tr>
+    <td class="q">{{ f.name }}</td>
+    <td>
+      {% if f.available %}{{ f.value }}{%- if f.saturated %}
+        <br><span class="muted">scale ceiling reached — the score cannot
+        distinguish this from a larger value</span>
+      {%- endif %}{% else %}
+        <span class="muted">not measured — {{ f.reason or 'no reason recorded' }}</span>
+      {% endif %}
+    </td>
+    <td class="nowrap">{{ "%g"|format(f.weight or 0) }}</td>
+    <td class="nowrap">
+      {% if f.available %}{{ "%.2f"|format(f.contribution or 0) }}{% else %}—{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="detail">
+  Weights are conventional: no published weighting exists for this combination
+  of factors. The score is not a probability and has not been calibrated
+  against any outcome.
+  {% if factors | selectattr('saturated') | list %}
+  A factor marked <em>scale ceiling reached</em> has passed the end of its
+  range, so the score treats it the same as any larger value. Those ranges are
+  conventions, not calibrated measurements.
+  {% endif %}
+</p>
+{% endif %}
+
+{% if observations %}
+<h2>Observation history</h2>
+<table>
+  <tr><th>Date</th><th>Sensor</th><th>Water area</th><th>Value type</th></tr>
+  {% for o in observations %}
+  <tr>
+    <td class="nowrap">{{ o.obs_date }}</td>
+    <td>{{ o.sensor or '—' }}{% if o.orbit_or_tile %} <span class="muted">{{ o.orbit_or_tile }}</span>{% endif %}</td>
+    <td class="nowrap">
+      {% if o.water_area_m2 is not none %}{{ "{:,.0f}".format(o.water_area_m2) }} m²
+      {% else %}<span class="muted">gap — no valid observation</span>{% endif %}
+    </td>
+    <td><span class="vt">{{ o.value_type }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="detail">
+  Gaps are recorded, never interpolated. A date with no usable observation
+  appears as a gap rather than being filled or omitted.
+</p>
+{% endif %}
+
+<h2>Provenance</h2>
+<table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td class="q">Data sources</td><td>{{ sources_text }}</td></tr>
+  <tr><td class="q">Configuration hash</td><td class="nowrap">{{ config_hash or '—' }}</td></tr>
+  <tr><td class="q">Code version</td><td class="nowrap">{{ code_version or 'unknown (not a git working tree)' }}</td></tr>
+  <tr><td class="q">Report generated</td><td class="nowrap">{{ generated_at }}</td></tr>
+</table>
+
+<h2>How to read this report</h2>
+<p class="detail">
+  Every value carries its type. <b>observed</b> is measured directly;
+  <b>classified</b> is the output of a rule or model; <b>estimated</b> is
+  derived with stated uncertainty; <b>derived</b> is computed from other
+  stored values; <b>unavailable</b> means the quantity could not be
+  determined, and the reason is given rather than a number.
+</p>
+<p class="detail">
+  Indicator levels are <b>indicators, not predictions</b>. This system does not
+  state that a dam will fail, or when. A blockage is reported as
+  <i>potential</i>; depth and volume are reported only where they can be traced
+  to a documented branch of the project's depth logic, and are otherwise
+  marked unavailable with the reason.
+</p>
+
+<div class="disclaimer">{{ disclaimer }}</div>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "dem": "DEM_GLO30_v02_EPSG32647.tif",
+  "products": {
+    "conditioned_dem": "C:\\Users\\Gowtham\\Downloads\\Project\\himalayan_dam_monitoring\\data\\processed\\baige_hydro\\baige_conditioned.tif",
+    "flow_direction": "C:\\Users\\Gowtham\\Downloads\\Project\\himalayan_dam_monitoring\\data\\processed\\baige_hydro\\baige_d8_pointer.tif",
+    "flow_accumulation": "C:\\Users\\Gowtham\\Downloads\\Project\\himalayan_dam_monitoring\\data\\processed\\baige_hydro\\baige_d8_accumulation.tif",
+    "streams": "C:\\Users\\Gowtham\\Downloads\\Project\\himalayan_dam_monitoring\\data\\processed\\baige_hydro\\baige_streams.tif",
+    "stream_threshold_cells": "500",
+    "depression_handling": "breach"
+  },
+  "stream_px": 13202,
+  "stream_fraction": 0.03679,
+  "stream_statistics": {
+    "stream_cells": 13202.0,
+    "stream_fraction": 0.0368,
+    "approx_channel_length_km": 132.02,
+    "raster_area_km2": 35.8801,
+    "drainage_density_km_per_km2": 3.6795
+  },
+  "observed_water_px": 8045,
+  "observed_water_within_30m_of_stream_px": 5418,
+  "observed_water_within_30m_of_stream_fraction": 0.6735
+}

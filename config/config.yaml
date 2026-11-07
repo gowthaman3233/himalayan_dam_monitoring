@@ -1,0 +1,1174 @@
+# =============================================================================
+# Himalayan landslide-dam / barrier-lake monitoring prototype -- configuration
+# =============================================================================
+# Validated by config/schema.py (Pydantic). Unknown keys are a hard error, so a
+# typo here fails loudly rather than being silently ignored.
+#
+# Sections are added at the phase that first reads them. Phase 0 covers:
+# project, paths, aoi, dates, gee, logging.
+# =============================================================================
+
+project:
+  name: "Himalayan Landslide-Dam and Barrier-Lake Monitoring"
+  version: "0.1.0"
+  # Brief, Section 9: required verbatim on every warning and report. The schema
+  # refuses to load if the phrase "Not an official warning" is removed.
+  disclaimer: >-
+    Research prototype output. Not an official warning.
+    Verify with authoritative sources.
+
+paths:
+  # All relative to the repository root. data/ and outputs/ are gitignored.
+  data: data
+  raw: data/raw
+  processed: data/processed
+  training: data/training
+  validation: data/validation
+  outputs: outputs
+  maps: outputs/maps
+  figures: outputs/figures
+  reports: outputs/reports
+  logs: outputs/logs
+
+# -----------------------------------------------------------------------------
+# Default area of interest
+# -----------------------------------------------------------------------------
+# Tsho Rolpa, Rolwaling Valley, Dolakha District, Nepal. Named in the project
+# brief (Section 6) as a water-vs-shadow test case: a known, large water body
+# enclosed by steep terrain that casts deep shadow.
+#
+# Encoded as point + buffer rather than a bounding box on purpose. Both published
+# sources give the position to arcminute precision (~+/-1 km), so inventing box
+# corners to four decimal places would imply accuracy the sources do not support.
+#
+# A 4000 m buffer is a circle of ~50 km^2: enough to contain the 3.45 km x 0.5 km
+# lake (Shrestha & Nakagawa 2014, which needs a radius of at least ~1.8 km) plus
+# roughly 2 km of flanking valley wall on each side -- the steep terrain that
+# produces the shadow this prototype must learn to reject. This stays inside the
+# "tens of km^2" local-processing budget in the brief, Section 3.
+#
+# Override per run; nothing in the code paths assumes this site.
+aoi:
+  kind: point
+  name: "Tsho Rolpa, Rolwaling Valley, Dolakha, Nepal"
+  lon: 86.467
+  lat: 27.867
+  buffer_m: 4000.0
+  source: >-
+    27 deg 52' N, 86 deg 28' E (= 27.867 N, 86.467 E), 4546 m a.s.l. --
+    Kayastha, R. B. and Maskey, S. (2024), "Glacial lake outburst flood (GLOF)
+    modeling of Tsho Rolpa glacial lake, Nepal", Proc. IAHS 387, 59-63,
+    doi:10.5194/piahs-387-59-2024. Concordant with Shrestha, B. B. and
+    Nakagawa, H. (2014), "Assessment of potential outburst floods from the Tsho
+    Rolpa glacial lake in Nepal", Natural Hazards 71(2), which gives
+    27.867 N / 86.467 E, surface area 1.537 km^2, max length 3.45 km,
+    max width 0.5 km, elevation 4580 m.
+
+dates:
+  # Default query window used by the acquisition modules when a run does not
+  # supply its own dates. Post-monsoon months are chosen simply because cloud
+  # cover over Nepal is lowest then; this is a convenience default, not a
+  # scientific threshold, and carries no claim beyond that.
+  query_window:
+    start: "2023-10-01"
+    end: "2023-11-30"
+
+# -----------------------------------------------------------------------------
+# Google Earth Engine
+# -----------------------------------------------------------------------------
+gee:
+  # The Cloud project ID itself is read from this environment variable (.env),
+  # never stored in this file (brief, Section 3).
+  project_env_var: GEE_PROJECT
+
+  # Sentinel-2 native resolution; all layers are co-registered to this grid.
+  default_scale_m: 10.0
+
+  # Refuse requests above this size so a mistyped AOI cannot try to pull a full
+  # Sentinel scene onto a laptop (brief, Section 3).
+  max_request_pixels: 50000000
+
+  # Collection IDs from the project brief, Section 5.
+  # VERIFIED against the live GEE catalog on 2026-10-03 by
+  # tests/test_gee_smoke.py -- see docs/methods.md 0.4 for the band-level record
+  # and outputs/gee_catalog_probe.json for the raw result.
+  collections:
+    s2_sr: "COPERNICUS/S2_SR_HARMONIZED"
+    s2_cloud_score_plus: "GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED"
+    s1_grd: "COPERNICUS/S1_GRD"
+    landsat8_l2: "LANDSAT/LC08/C02/T1_L2"
+    landsat9_l2: "LANDSAT/LC09/C02/T1_L2"
+    # The brief names COPERNICUS/DEM/GLO30, but Earth Engine has deprecated it
+    # in favour of GLO30_2024_1. The switch is not cosmetic: the deprecated
+    # collection exposes only a placeholder acquisition date (2006-01-01),
+    # whereas GLO30_2024_1 carries real per-tile acquisition windows. Since the
+    # DEM acquisition date is the hinge of the Branch A / Branch B depth
+    # decision (brief, Section 8), only the newer collection makes that hinge a
+    # measured, traceable, per-AOI value instead of an assumed constant.
+    # Measured over the default AOI: 2011-01-05 -> 2014-09-08.
+    # Bands are identical (DEM, EDM, FLM, HEM, WBM). See docs/methods.md 0.6.
+    dem_glo30: "COPERNICUS/DEM/GLO30_2024_1"
+
+# -----------------------------------------------------------------------------
+# Acquisition (Phase 1)
+# -----------------------------------------------------------------------------
+# Scenes are exported PER SCENE, not as composites. Compositing belongs to
+# preprocessing (Phase 2) and would be wrong before cloud masking; per-scene
+# exports also preserve the orbit / tile / solar-angle metadata that Section 5
+# requires and that the per-scene shadow masks in Phase 2 consume.
+acquisition:
+  # Upper bound on scenes exported per sensor per run. Keeps a local run
+  # bounded on a laptop; raise it to build a full time series.
+  max_scenes_per_sensor: 3
+
+  # "auto" derives the UTM zone from the AOI centroid (brief, Section 6).
+  # An explicit "EPSG:xxxxx" overrides it.
+  export_crs: auto
+
+  # Refuse a single export above this size. getDownloadURL has its own server
+  # limit; this fails earlier and with a clearer message.
+  max_export_bytes: 33554432
+
+  # Scene-level cloud screening for the optical sensors (percent). This decides
+  # which scenes are worth downloading; it is NOT the per-pixel cloud mask,
+  # which is Phase 2. Both are needed and they are different things.
+  #
+  # Scenes rejected by this filter are counted and logged, never dropped
+  # silently -- a run must always be able to report that a window was cloudy
+  # rather than appear to have found nothing (brief, Section 7.8: gaps are
+  # recorded as gaps).
+  #
+  # 40% is a working default, not a published threshold: over the default AOI
+  # the 2023 post-monsoon window ranges from 0.84% to 99.88% cloud, so a filter
+  # in this region separates usable scenes from unusable ones. Tune per AOI.
+  max_cloud_fraction: 40.0
+
+  sentinel2:
+    # Brief, Section 5. Verified present on COPERNICUS/S2_SR_HARMONIZED.
+    # B2 blue, B3 green, B4 red, B8 NIR, B11 SWIR1, B12 SWIR2.
+    reflectance_bands: [B2, B3, B4, B8, B11, B12]
+    # Scene classification layer, used for cloud masking in Phase 2.
+    qa_bands: [SCL]
+    # Cloud Score+ bands, exported per scene and matched by system:index.
+    # Needed when preprocessing.cloud.method is cloud_score_plus or both.
+    # cs = per-pixel clear score, cs_cdf = distribution-adjusted.
+    cloud_score_bands: [cs, cs_cdf]
+
+  sentinel1:
+    # VV, VH and the per-pixel incidence angle, which must be retained for the
+    # SAR layover/shadow geometry in Phase 2 (brief, Section 7.1).
+    bands: [VV, VH, angle]
+    instrument_mode: IW
+    # null keeps both orbit directions, each exported separately with its orbit
+    # recorded (brief, Section 5). Set to ASCENDING or DESCENDING to restrict.
+    orbit_pass: null
+
+  landsat:
+    # Collection 2 Level 2 surface reflectance. SR_B2 blue, SR_B3 green,
+    # SR_B4 red, SR_B5 NIR, SR_B6 SWIR1, SR_B7 SWIR2 (Landsat 8/9 OLI).
+    reflectance_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+    qa_bands: [QA_PIXEL]
+
+  dem:
+    # DEM elevation, HEM height-error mask (feeds depth uncertainty in Phase
+    # 10), WBM water-body mask.
+    bands: [DEM, HEM, WBM]
+    # GLO30_2024_1 returns many heavily overlapping 1-degree tiles per AOI, in
+    # more than one tile_version (01 and 02 over the default AOI). Selecting a
+    # version deterministically avoids blending versions in the mosaic.
+    # See docs/methods.md 0.6.
+    tile_version_policy: highest
+
+# -----------------------------------------------------------------------------
+# Preprocessing (Phase 2)
+# -----------------------------------------------------------------------------
+# Every threshold here has a citation in docs/methods.md. Values marked
+# "convention" are engineering defaults carrying no scientific claim.
+preprocessing:
+  terrain:
+    # Generic hillshade used for quick-looks and visual checks only. The
+    # per-scene shadow masks use that scene's own sun angles, never these.
+    quicklook_azimuth_deg: 315.0
+    quicklook_altitude_deg: 45.0
+
+    # Ray sampling interval, in pixels, for the cast-shadow horizon search
+    # (Dozier & Frew 1990). 1.0 samples every pixel along the ray; below 1
+    # oversamples. convention.
+    shadow_ray_step_px: 1.0
+
+    # How far to search for blocking terrain. null derives it from the DEM's
+    # own relief (relief / tan(solar elevation)), which is the furthest any
+    # terrain in the DEM could cast -- exact, not an approximation.
+    shadow_max_distance_m: null
+
+  cloud:
+    # cloud_score_plus | scl | both  (both = union, the conservative choice)
+    method: both
+
+    # Cloud Score+ "cs" below this is treated as not-clear.
+    # 0.60 is the threshold recommended by the Cloud Score+ authors; 0.50-0.65
+    # is the usable range (Pasquarella et al. 2023). cited.
+    cloud_score_threshold: 0.60
+    # "cs" (per-pixel clear score) or "cs_cdf" (distribution-adjusted).
+    cloud_score_band: cs
+
+    # Sentinel-2 SCL class codes.
+    #   8 cloud medium probability, 9 cloud high probability, 10 thin cirrus
+    scl_cloud_classes: [8, 9, 10]
+    #   3 cloud shadow -- kept SEPARATE from terrain shadow (brief, Section 7.1)
+    scl_cloud_shadow_classes: [3]
+    #   0 no data, 1 saturated or defective
+    scl_defective_classes: [0, 1]
+    #
+    # NOTE: SCL class 2 ("dark area pixels") is deliberately NOT listed as
+    # cloud. In steep terrain it is dominated by TOPOGRAPHIC shadow, which is
+    # precisely the signal this project must keep and reason about rather than
+    # mask away. Treating it as cloud would discard the core evidence.
+
+    # Grow cloud and cloud-shadow masks by this many pixels to catch soft
+    # edges. convention; 2 px = 20 m at the project scale.
+    dilate_px: 2
+
+  sar:
+    # COPERNICUS/S1_GRD already serves VV/VH in decibels (verified in Phase 1,
+    # docs/methods.md 1.4). Applying a dB conversion again would corrupt the
+    # data, so it is off. Set true only for a linear-power source such as
+    # COPERNICUS/S1_GRD_FLOAT.
+    convert_to_db: false
+
+    # lee | median | none  (Lee 1980; median is the "focal median" option)
+    speckle_filter: lee
+    speckle_window_px: 5
+    # Equivalent number of looks for the Lee filter. Sentinel-1 IW GRDH is
+    # nominally ~4.4 ENL. cited -- see docs/methods.md.
+    equivalent_number_of_looks: 4.4
+
+    # Sentinel-1 is RIGHT-looking, so from a target the sensor lies at
+    # (heading - 90) degrees. These mean headings give the direction from the
+    # ground toward the sensor. Overridable per scene.
+    toward_sensor_azimuth_deg:
+      ASCENDING: 257.5
+      DESCENDING: 102.5
+
+    # Grow the layover/shadow mask by this many pixels. convention.
+    geometry_dilate_px: 1
+
+  hydrology:
+    # Minimum contributing cells for a channel. At 10 m, 500 cells = 0.05 km^2.
+    # convention -- tune per AOI; the value drives stream density directly.
+    stream_threshold_cells: 500
+    # Breach rather than fill depressions where possible: breaching preserves
+    # the drainage pattern better in steep terrain (WhiteboxTools guidance).
+    depression_handling: breach
+
+  stack:
+    # nearest | bilinear | cubic. Categorical layers (SCL, masks) always use
+    # nearest regardless of this setting -- interpolating class codes would
+    # invent classes that do not exist.
+    resampling: bilinear
+
+
+# =============================================================================
+# Segmentation models (Phase 6)
+# =============================================================================
+# Brief, Section 7.5. The channel stack, patch geometry and splits are
+# configurable here; nothing in models/ may hard-code them.
+models:
+  # Class order fixes the integer label, so index == label. The brief fixes
+  # these five. Renaming is safe; REORDERING is not once patches exist.
+  classes:
+    - background          # 0  land, no other class applies
+    - water               # 1
+    - landslide           # 2  landslide or bare debris
+    - terrain_shadow      # 3  ONLY where shadow makes the material undeterminable
+    - snow_ice            # 4
+  # Excluded from loss and from every metric. Must sit above the class range.
+  ignore_index: 255
+
+  # The input stack, in order. Section 7.5 lists exactly these fifteen.
+  # len(channels) IS the model's in_channels -- there is no second place to set
+  # it, so a stack change cannot silently disagree with the network width.
+  channels:
+    - S2_B2
+    - S2_B3
+    - S2_B4
+    - S2_B8
+    - S2_B11
+    - S2_B12
+    - NDWI
+    - MNDWI
+    - NDVI
+    - S1_VV
+    - S1_VH
+    - DEM
+    - SLOPE
+    - ILLUMINATION
+    - TERRAIN_SHADOW
+
+  patch:
+    size_px: 256            # brief, Section 7.5
+    # Below size_px the patches overlap, which augments a small hand-labelled
+    # set. Overlapping patches must never straddle a split boundary; see
+    # split.buffer_px. convention.
+    stride_px: 128
+    scale_m: 10.0
+    # Drop patches that are almost entirely ignore_index: they contribute
+    # little gradient and distort the per-class balance the metrics are read
+    # from. convention.
+    min_labelled_fraction: 0.10
+
+  split:
+    # The brief FORBIDS random pixel or random patch splits that leak
+    # spatially adjacent data, so "random" is not an available option.
+    strategy: geographic
+    block_km: 10.0          # convention
+    train_fraction: 0.70
+    val_fraction: 0.15      # test takes the remainder
+    # Patches within this distance of a split boundary are dropped. Without
+    # it, two patches either side of the line share ground and the test set is
+    # contaminated by adjacency. One patch edge. convention.
+    buffer_px: 256
+    seed: 0
+
+  training:
+    batch_size: 8
+    epochs: 50
+    learning_rate: 0.0003
+    weight_decay: 0.0001
+    num_workers: 2
+    seed: 0
+    # Terrain shadow and snow are rare next to background. An unweighted loss
+    # can reach a low value while never predicting them at all -- exactly the
+    # failure Section 7.5's per-class metrics exist to expose. null means
+    # unweighted; set deliberately and report that it was set.
+    class_weights: null
+    early_stopping_patience: 10
+    # NEVER overall accuracy: Section 7.5 forbids relying on it, and a model
+    # that never predicts shadow still scores well on it.
+    monitor_metric: macro_iou
+
+  # Encoder for the segmentation_models_pytorch baseline the brief names.
+  # NOTE the controlled ablation is models.attention_unet.plain_unet, which
+  # differs from the Attention U-Net ONLY in the gates. An smp model differs
+  # in many ways at once, so it answers "is our model any good" rather than
+  # "do the gates help".
+  baseline_encoder: resnet34
+  # ImageNet weights expect 3 RGB channels; against a 15-channel stack smp
+  # adapts the first convolution, so the transfer is partial. null = random
+  # init. If set, say so when reporting.
+  baseline_encoder_weights: null
+
+  # ---------------------------------------------------------------------------
+  # External datasets, and the label mapping the brief requires documented.
+  #
+  # BOTH ARE DISABLED until downloaded and their licences confirmed. Facts
+  # below were checked against the official repositories on 2026-11-07; see
+  # docs/labelling.md for what is verified and what is not.
+  #
+  # NEITHER DATASET LABELS TERRAIN SHADOW. Both are binary. Class 3 -- the
+  # project's core contribution -- can only come from hand labelling.
+  # ---------------------------------------------------------------------------
+  sources:
+    sen1floods11:
+      enabled: false
+      root: null
+      # Verified from the cloudtostreet/Sen1Floods11 repository: the QC layer
+      # is -1 No Data / Not Valid, 0 Not Water, 1 Water.
+      label_map:
+        "-1": null        # No Data -> ignore_index
+        "0": 0            # Not Water -> background
+        "1": 1            # Water
+      notes: >
+        Sentinel-1 and Sentinel-2 flood chips. Supplies class 1 only: it has
+        no landslide, shadow or snow labels, and no DEM or slope layer, so
+        those channels must be filled from our own DEM or masked out.
+        LICENCE NOT STATED on the repository - confirm before use.
+    landslide4sense:
+      enabled: false
+      root: null
+      # Verified from the IARAI Landslide4Sense-2022 material: masks are
+      # 0 non-landslide, 1 landslide.
+      label_map:
+        "0": 0            # non-landslide -> background
+        "1": 2            # landslide
+      notes: >
+        14 bands (Sentinel-2 B1-B12, DEM, ALOS PALSAR slope) at ~10 m, in
+        HDF5. Supplies class 2 only. Patches are 128x128, NOT the 256 this
+        project uses, so they are padded or tiled rather than cropped.
+        Labels are public for the TRAINING split only (3,799 patches); the
+        245 validation and 800 test patches are unlabelled, so our own
+        geographic split must be carved from the 3,799.
+        LICENCE: Creative Commons Attribution 4.0 International, verified on
+        the Zenodo record itself (10.5281/zenodo.10463239) on 2026-11-07, not
+        on a mirror. Usable WITH ATTRIBUTION: Ghorbanzadeh, Xu, Ghamisi, Kopp
+        and Kreil (2022), "Landslide4Sense: Reference Benchmark Data and Deep
+        Learning Models for Landslide Detection", IEEE TGRS 60, 1-17.
+
+logging:
+  level: INFO
+  file_level: DEBUG
+  to_console: true
+  to_file: true
+  format: "%(asctime)s %(levelname)-8s %(name)s | %(message)s"
+  date_format: "%Y-%m-%dT%H:%M:%S"
+
+# -----------------------------------------------------------------------------
+# Detection (Phase 3 onward)
+# -----------------------------------------------------------------------------
+detection:
+  # Rule-based water detection (brief, Section 7.2). This is the BASELINE that
+  # Phase 4's shadow rejection is measured against, so it is deliberately
+  # shadow-naive: nothing here consults the terrain-shadow mask. Section 7.3
+  # requires the false-water reduction to be reported "compared with the
+  # index-only mask", which means that mask must exist here, unimproved.
+  water:
+    optical:
+      # ndwi | mndwi | both_and | both_or
+      #
+      # Both indices are computed and reported whichever rule is chosen; this
+      # selects which drives the mask. both_and -- a pixel must satisfy NDWI
+      # AND MNDWI -- is the default, as the most conservative use of the two
+      # indices the brief requires.
+      #
+      # NEITHER index can separate water from snow, and MNDWI provably cannot:
+      # MNDWI = (Green - SWIR1)/(Green + SWIR1) is the SAME EXPRESSION as the
+      # Normalized Difference Snow Index (Hall et al. 1995), so snow scores
+      # high on MNDWI by construction. Measured over the default AOI: MNDWI > 0
+      # alone selects 32.2 km^2 of which 74% is SCL snow/ice, merging the lake
+      # into a 13.3 km^2 blob of glacier. That is what snow_screen_nir_max_-
+      # reflectance below is for. See docs/methods.md 3.2.
+      rule: both_and
+
+      # Zero is the land/water boundary proposed by the authors of each index
+      # (McFeeters 1996; Xu 2006), not a value tuned here. cited.
+      ndwi_threshold: 0.0
+      mndwi_threshold: 0.0
+
+      # Snow screen: reject index-water whose NIR reflectance is at or above
+      # this. Water reflects <11% in the near infrared while snow reflects far
+      # more, which is the test the MODIS snow-mapping algorithm uses to keep
+      # water from being mapped as snow (Hall et al. 1995; Hall et al. 2002).
+      # Used here in the opposite direction. cited.
+      #
+      # Measured effect over the default AOI: largest water body 13.302 ->
+      # 1.601 km^2 against a published 1.537 km^2, snow contamination 74% ->
+      # 5.6%, while still recovering 95.7% of the independent GLO-30 DEM
+      # water-body mask. See docs/methods.md 3.2.
+      #
+      # null disables it, which leaves the pure index-only mask. The unscreened
+      # mask is retained either way (WaterEvidence.pre_screen_water) because
+      # Section 7.3 measures Phase 4 against the index-only baseline.
+      snow_screen_nir_max_reflectance: 0.11
+
+      # Sentinel-2 L2A is stored as scaled integers, exported unchanged so the
+      # stored product stays auditable (docs/methods.md 1.4). The indices are
+      # ratios and so scale-invariant, but the snow screen above is a physical
+      # reflectance threshold and needs the factor. S2_SR_HARMONIZED already
+      # absorbs the post-baseline-04.00 BOA_ADD_OFFSET, so no offset term is
+      # required here.
+      reflectance_scale: 0.0001
+
+    sar:
+      # Which polarisation drives the SAR mask. VV is the default: over calm
+      # water VV returns more specular (darker, higher contrast against land)
+      # than VH at Sentinel-1 incidence angles. Both are reported regardless.
+      band: VV
+
+      # tiled_otsu | otsu | fixed
+      #
+      # Otsu (1979) maximises between-class variance and so ASSUMES the
+      # histogram has two classes of comparable mass. Over this project's AOIs
+      # water is a few percent of the scene, which is precisely the case Chini
+      # et al. (2017) identify as breaking global thresholding. tiled_otsu
+      # therefore thresholds per tile, keeps only the tiles whose histogram
+      # actually separates, and pools those pixels for the final threshold.
+      threshold_method: tiled_otsu
+
+      histogram_bins: 256
+
+      # Sanity clip on the dB histogram so a handful of extreme outliers cannot
+      # drag the between-class variance. Sentinel-1 IW GRD land/water values sit
+      # well inside this window. convention.
+      search_range_db: [-35.0, 5.0]
+
+      # Tile side in pixels for tiled_otsu. 128 px = 1.28 km at 10 m: large
+      # enough to hold a lake shore plus its surrounding land (both classes must
+      # be present in a tile for a threshold to mean anything), small enough
+      # that water is not a negligible fraction of the tile. convention --
+      # Chini et al. (2017) search tile size hierarchically, which this
+      # simplifies to a single configured scale. See docs/methods.md 3.3.
+      tile_px: 128
+
+      # Reject a tile with fewer than this fraction of valid (non-masked) pixels.
+      min_tile_valid_fraction: 0.5
+
+      # Minimum dimensionless separation of the two fitted modes for a
+      # histogram to count as bimodal. 2.0 is the two-peak condition of Ashman,
+      # Bird & Zepf (1994) eq. 3.2. cited -- see docs/methods.md 3.4.
+      min_separation: 2.0
+
+      # Minimum number of tiles that must pass the bimodality test before a
+      # threshold is accepted.
+      min_tiles: 1
+
+      # Used only when threshold_method is "fixed", and as the fallback when no
+      # tile passes the bimodality test.
+      #
+      # null on purpose. If the data do not support a threshold, this project
+      # reports the SAR mask as UNAVAILABLE with a reason rather than inventing
+      # a dB cutoff -- a fabricated threshold would produce a water mask that
+      # looks like a measurement but is not traceable to the data (brief,
+      # Section 2). Set it only if you have a value cited for your own AOI.
+      fixed_threshold_db: null
+
+    # optical | sar | union | intersection
+    #
+    # intersection -- both sensors must agree -- chosen on measured evidence
+    # over the default AOI, against two independent references (the GLO-30
+    # DEM-epoch water-body mask at 1.550 km^2 and a published 1.537 km^2):
+    #
+    #   rule          total     largest  WBM recall  snow  in SAR layover/shadow
+    #   optical       2.683     1.601      95.7%     5.6%        10.3%
+    #   sar          30.299    12.868      98.4%    44.3%        42.3%
+    #   union        30.608    13.041      98.5%    44.0%        42.0%
+    #   intersection  2.373     1.578      95.6%     4.5%        10.6%
+    #                 (km^2)    (km^2)
+    #
+    # union was the initial choice, on the reasoning that the most inclusive
+    # mask gives Phase 4 the most false water to remove. The data refuted it:
+    # single-scene Sentinel-1 amplitude thresholding does not work in this
+    # terrain (27.2% of the AOI is radar layover or shadow, and 42.3% of SAR
+    # "water" falls inside it), so union is swamped by SAR false positives and
+    # re-merges the lake into a 13 km^2 blob. Intersection matches the brief's
+    # own Section 7.3 instruction to defer to optical evidence where SAR is
+    # unreliable. See docs/methods.md 3.5.
+    #
+    # The per-source masks are always reported separately, so every rule above
+    # stays reproducible from one run.
+    combine: intersection
+
+    polygons:
+      # Drop specks below this area. 1000 m^2 = 10 pixels at 10 m. convention --
+      # tune per AOI; it trades speckle against genuinely small ponds.
+      min_area_m2: 1000.0
+
+      # 4 or 8. 8-connectivity keeps a channel that runs diagonally across the
+      # pixel grid as one body instead of splitting it into a chain. convention.
+      connectivity: 8
+
+  # ---------------------------------------------------------------------------
+  # Shadow rejection (Phase 4) -- the core contribution
+  # ---------------------------------------------------------------------------
+  # Transparent additive evidence fusion (brief, Section 7.3). Each piece of
+  # evidence is mapped to a signed support in [-1, +1] by a soft membership
+  # function, multiplied by its weight, and summed per class. Land is the
+  # REFERENCE class with a score of zero, so water and terrain shadow must each
+  # earn evidence above it. Probabilities are a softmax over the three scores.
+  #
+  # What p_terrain_shadow means: the probability that shadow leaves the surface
+  # material INDETERMINATE -- the brief's Section 7.5 class 3, used only where
+  # the material cannot be told. It is NOT the probability that the pixel is
+  # geometrically shadowed; the Phase 2 mask already states that deterministically,
+  # and a lake inside a shadow is still a lake. See docs/methods.md 4.2.
+  shadow_rejection:
+    membership:
+      # Each entry is the 50% crossing point of a logistic membership, plus the
+      # width over which it transitions. Using cited mask thresholds as the
+      # crossing point keeps the citation meaningful while yielding a
+      # probability rather than a hard veto.
+
+      # How far the optical indices are trusted to determine surface MATERIAL
+      # inside a shadow, relative to SAR (which is illumination-independent and
+      # counts fully). NDWI and MNDWI are band ratios, so the illumination
+      # factor cancels to first order -- that is why ratio indices are usable
+      # in steep terrain at all -- and they therefore still carry material
+      # information in shadow. Only to first order though: diffuse skylight is
+      # spectrally unlike the direct beam, and methods 2.4 measured that
+      # reflectance here is not governed by direct-beam geometry. Hence 0.5
+      # rather than 1.0. convention.
+      optical_determinacy_scale: 0.5
+
+      slope:
+        # Standing water requires near-flat ground; terrain shadow and radar
+        # layover/shadow both require steep ground. Measured over the default
+        # AOI: DEM-epoch water has median slope 0.0 deg, terrain shadow 52.3 deg,
+        # radar layover/shadow 53.3 deg.
+        #
+        # 10 deg is the threshold Chen et al. (2021) use to mask topographic
+        # shadow when mapping glacial lakes in High Mountain Asia -- the same
+        # problem, the same region. cited.
+        water_max_deg: 10.0
+        softness_deg: 4.0          # convention
+
+        # How much flat ground counts as evidence FOR water. 0.0 makes the
+        # term one-sided: steep ground rules water out, flat ground does not
+        # rule it in.
+        #
+        # This is not a tuning knob, it is the physics. Flatness is a
+        # NECESSARY condition for standing water, not evidence of it -- almost
+        # all flat ground in any AOI is dry land. Chen et al. (2021) likewise
+        # use slope only to exclude.
+        #
+        # Measured over the default AOI, all other evidence held fixed and
+        # persistence excluded so the slope term is isolated:
+        #
+        #   flat_support_scale   water     false water removed   known water kept
+        #   0.0 (one-sided)      4.18 km2        81.9%                96.6%
+        #   0.5                  6.85 km2        76.1%                97.0%
+        #   1.0 (symmetric)      9.50 km2        73.2%                97.1%
+        #
+        # Symmetry more than doubles detected water -- promoting valley floors
+        # and flat glacier surfaces -- to gain 0.5 points of known-water
+        # retention. See docs/methods.md 4.4.
+        flat_support_scale: 0.0
+
+      illumination:
+        # Shaded relief below 0.25, the second half of the Chen et al. (2021)
+        # topographic-shadow criterion. cited.
+        #
+        # Our hillshade is computed from each scene's own sun angles rather
+        # than a nominal illumination, which is strictly better conditioned.
+        shadow_below: 0.25
+        softness: 0.10             # convention
+
+      nir:
+        # Hall et al. (1995) water/snow discriminator, as in Phase 3.
+        water_max_reflectance: 0.11
+        softness: 0.04             # convention
+
+      water_index:
+        # Distance past the index threshold at which support saturates.
+        # The threshold itself comes from detection.water.optical. convention.
+        softness: 0.15
+
+      sar:
+        # null -> use the threshold Phase 3 derived from the data for this
+        # scene, so there is one SAR threshold per run, not two.
+        water_max_db: null
+        softness_db: 2.5           # convention
+
+      persistence:
+        # Fraction of valid observations on which a pixel read as water.
+        # A lake stays put; cloud and speckle do not. NOTE: terrain shadow also
+        # stays put when scenes share an overpass geometry, so persistence does
+        # NOT discriminate shadow over a short window -- see docs/methods.md 4.5.
+        water_min_fraction: 0.5    # convention
+        softness: 0.25             # convention
+        # Below this many valid observations the term is not used at all,
+        # rather than being computed from too little evidence.
+        min_observations: 2
+
+    # Evidence weights, in arbitrary "evidence points". All convention: there is
+    # no published weighting for this combination. They are reported with a
+    # sensitivity analysis (docs/methods.md 4.6) rather than presented as tuned
+    # constants, and the per-factor contributions are recorded per pixel so any
+    # verdict can be traced to the evidence that produced it.
+    #
+    # Rationale for the ordering: slope is weighted highest because it is the
+    # most reliable physical discriminator measured here; the geometric shadow
+    # mask is next because it was validated at 92.3% agreement in Phase 2;
+    # single-scene SAR is weighted modestly because Phase 3 showed it is
+    # unreliable in this terrain (docs/methods.md 3.5).
+    weights:
+      water_index: 1.0
+      nir: 1.5
+      slope: 2.0
+      sar_backscatter: 1.0
+      persistence: 1.0
+      illumination: 1.0
+      terrain_shadow_mask: 1.5
+
+    # How strongly determinate material evidence suppresses the shadow class.
+    # This is what makes the brief's Section 7.3 rule 2 work -- "in terrain
+    # shadow + SAR water-like -> water" -- without special-casing it: if the
+    # material can be determined, the pixel is not "shadow, material
+    # indeterminate". convention.
+    material_determinacy_weight: 2.0
+
+    # Softmax temperature over the class scores. Lower = more decisive.
+    # 1.0 means one evidence point is one unit of log-odds. convention.
+    temperature: 1.0
+
+    # Below this top-class probability the pixel is flagged uncertain rather
+    # than being reported as a confident classification. convention.
+    min_confidence: 0.5
+
+    # Refuse a WATER verdict where NO optical term applied, marking the pixel
+    # uncertain instead.
+    #
+    # A pixel counts as "valid" if ANY single term applies, and the
+    # DEM-derived and SAR terms apply everywhere -- so a pixel with no usable
+    # optical data still got a verdict, decided by radar. Water, dry snow and
+    # smooth ice are all dark to radar, so that verdict has no basis in the
+    # data.
+    #
+    # Measured on Baige 2018, where 40.1% of the Sentinel-2 scene is optical
+    # nodata at the scene edge: the fusion reported water at a median 3,822 m
+    # on flat high ground, and 88.9% of everything it added over the
+    # rule-based mask had no optical observation at all (docs/validation.md
+    # 24, Finding 4a).
+    #
+    # Every rule in the brief's Section 7.3 begins "dark OPTICAL pixel", and
+    # its third rule makes SAR that cannot be corroborated *uncertain*. The
+    # section has no rule for "no optical observation at all"; this follows
+    # its intent. Set false to restore the old behaviour -- the reason mask
+    # "water_without_optical" is populated either way, so the effect stays
+    # measurable from the result.
+    require_optical_for_water: true
+
+    # Brief, Section 7.3: a SAR-water-like pixel inside the layover/shadow mask
+    # is UNCERTAIN and the fusion defers to optical evidence. false = the SAR
+    # term contributes nothing there (the pixel is flagged sar_unreliable);
+    # true would trust SAR everywhere, which Phase 3 showed is wrong here.
+    trust_sar_in_layover_shadow: false
+
+  # ---------------------------------------------------------------------------
+  # Bi-temporal landslide change detection (Phase 5)
+  # ---------------------------------------------------------------------------
+  # Brief, Section 7.4: compare pre- and post-event composites on NDVI drop,
+  # brightness/SWIR increase and Sentinel-1 backscatter change.
+  #
+  # This module supplies the "new" in "new landslide". The brief is explicit
+  # that the U-Net classifies landslide-LIKE surfaces on a single date, so
+  # novelty must come from here and never from segmentation.
+  landslide_change:
+    optical:
+      # NDVIvar = NDVI_post - NDVI_pre (Notti et al. 2023, eq. 1). A landslide
+      # strips vegetation, so the change is negative.
+      #
+      # -0.15 is the upper end of the range those authors give: "the optimal
+      # threshold should be in the range of -0.20 to -0.15". They stress it has
+      # no fixed value and is set by an operator after visual assessment, so
+      # this is a cited STARTING POINT to be calibrated per AOI, not a
+      # universal constant. cited.
+      ndvi_drop: -0.15
+
+      # Brightness/SWIR increase: fresh bare rock and soil are brighter than
+      # the vegetation or soil they replaced.
+      #
+      # No published threshold was found for this signal, so it is NOT given
+      # an invented one. mad_zscore derives it from the scene: a robust
+      # z-score using the median and the median absolute deviation, which
+      # speckle and a skewed change distribution cannot drag around the way
+      # they drag a mean and standard deviation.
+      #   mad_zscore | fixed
+      brightness_method: mad_zscore
+      brightness_min_z: 3.0            # convention
+      # Used only when brightness_method is "fixed". null on purpose.
+      brightness_fixed_increase: null
+
+    sar:
+      # Backscatter change, in dB. The MAGNITUDE is used, not the sign:
+      # backscatter rises on some parts of a landslide and falls on others
+      # (Burrows et al. 2022; Mondini et al. 2021), so a signed threshold
+      # would systematically miss half of each failure.
+      #
+      # NOTE: interferometric coherence loss is the stronger SAR indicator in
+      # the literature, but COPERNICUS/S1_GRD carries amplitude only -- SLC
+      # data would be required. Recorded as a limitation, not worked around.
+      #   mad_zscore | fixed
+      change_method: mad_zscore
+      min_abs_z: 3.0                   # convention
+      fixed_min_abs_db: null
+
+    # How many of the available signals must agree before a pixel is called
+    # changed. 2 of 3 is the default: any single signal has a known failure
+    # mode (NDVI fails on bare ground, brightness on illumination change, SAR
+    # on geometry), and requiring agreement is what makes them complementary.
+    # Signals whose inputs were not supplied are not counted as disagreeing.
+    min_agreeing_signals: 2
+
+    gating:
+      # Landslides occur on slopes. Notti et al. (2023) pair their NDVI
+      # threshold with "slope > 15 deg" at pixel level. cited.
+      min_slope_deg: 15.0
+      # ...and filter polygons by median slope, for which they used 17 deg and
+      # 20 deg at their two sites. The lower is taken as the default. cited.
+      min_median_slope_deg: 17.0
+
+      # Snow is the dominant source of spurious change here: a fresh snowfall
+      # between the two dates crushes NDVI and raises brightness, which is
+      # exactly a landslide's signature. Notti et al. (2023) handle this by
+      # requiring images from the season with "no snow coverage"; this
+      # prototype cannot assume that, so it screens per pixel instead.
+      #
+      # Snow test of Hall et al. (1995): NDSI >= 0.4 AND NIR > 0.11
+      # reflectance. A pixel that is snow on EITHER date is excluded, because
+      # the change is then unattributable either way. cited.
+      exclude_snow: true
+      snow_ndsi_min: 0.4
+      snow_nir_min_reflectance: 0.11
+
+      # Terrain shadow on either date makes the optical change unreliable
+      # (docs/methods.md 2.4). Excluded rather than trusted.
+      exclude_terrain_shadow: true
+
+      # Exclude pixels that are OPEN WATER on the post date. A landslide
+      # deposit cannot be under water, so water on the post date is never
+      # showing debris.
+      #
+      # Excluding only pixels that newly became water is not enough, and
+      # Baige showed why: the river upstream of the dam was already water and
+      # became a deeper, wider lake. NDVI went -0.510 -> -0.965 and VV
+      # -10.6 -> -22.8 dB, which trips both signals, yet the pixel is not
+      # "new" water and so survived a new-water-only filter. The 29,000 m²
+      # "largest landslide" it produced was lake.
+      #
+      # Water satisfies two of the three signals unaided -- NDVI falls because
+      # water absorbs NIR, and the SAR change is large because water is
+      # specular -- so without this the change map fills with the impoundment
+      # the dam created.
+      #
+      # The caller supplies the mask from Phase 3/4 water detection; this
+      # module does not import the water detector, so the phases stay
+      # separable and the caller chooses which water mask to trust.
+      # See docs/methods.md 5.10.
+      exclude_water_on_post_date: true
+
+    polygons:
+      # 1000 m^2 = 10 pixels at 10 m. convention. Notti et al. report their
+      # mapped landslides are "always more than 100 m2", which is a result
+      # rather than a filter, so it is not adopted as one.
+      min_area_m2: 1000.0
+      connectivity: 8
+
+  # ---------------------------------------------------------------------------
+  # River blockage detection (Phase 7)
+  # ---------------------------------------------------------------------------
+  # Brief, Section 7.6: a candidate is created when a new landslide polygon
+  # intersects or comes within a configurable distance of the stream network,
+  # AND there is evidence of obstruction -- channel narrowing, loss of
+  # downstream water continuity, and/or new upstream water.
+  #
+  # The conjunction is the whole point. A landslide beside a river is a
+  # landslide beside a river; it is not a dam. Required system test 4 asserts
+  # that proximity alone NEVER produces a candidate, however close the
+  # landslide comes to the channel.
+  blockage:
+    # Smallest landslide component that may become a dam candidate.
+    #
+    # Phase 5 applies a 1000 m^2 floor to its own polygons, but Phase 7 reads
+    # the raw change mask and so bypassed it. The Baige 2018 run showed the
+    # cost: 153 candidates for ONE dam, of which 76 were a single 10 m pixel
+    # and 18 scored confidence 1.000 -- because the obstruction evidence is
+    # measured over a 500 m reach, so a one-pixel fragment beside a blocked
+    # river inherits the real dam's evidence.
+    #
+    # Default matches the Phase 5 polygon floor: anything smaller is below the
+    # system's own threshold for calling something a landslide at all. Raise it
+    # toward the channel width for a deployment -- a deposit must span the
+    # river to dam it.
+    min_landslide_area_m2: 1000.0
+
+    # How near a landslide must come to the stream network to be considered at
+    # all. 50 m = 5 pixels at 10 m. convention -- a landslide that stops 50 m
+    # short of the channel has not dammed it, but DEM-derived stream networks
+    # are themselves only accurate to a few pixels in steep terrain.
+    max_distance_to_stream_m: 50.0
+
+    # How far apart ALONG THE STREAM two blockages must lie to be distinct.
+    #
+    # One dam is routinely detected as several landslide components: the slope
+    # gate carves the channel-crossing part out of a deposit lying on a flat
+    # valley floor (docs/methods.md 5.9), and cloud and snow fragment it
+    # further. Because the obstruction evidence is measured over a REACH, each
+    # fragment sees the same impounded water and reports it as if
+    # independently confirmed. Baige 2018: the four top-ranked candidates
+    # claimed 136,500-154,800 m^2 of gained water upstream -- the same water,
+    # counted four times -- so picking "the candidate with the most impounded
+    # water" picked an arbitrary fragment.
+    #
+    # Defaults to evidence_search_m: two blockages closer together than the
+    # radius over which their evidence is gathered cannot be told apart by
+    # that evidence. Distance is measured along the network, not across
+    # country, so opposite banks of a gorge merge and separate tributaries do
+    # not.
+    #
+    # 0 does NOT disable merging: two deposits reaching the same stream pixels
+    # are one obstruction at any distance, which is exactly the slope-gate
+    # case. This setting controls only how far ALONG the channel the grouping
+    # additionally extends.
+    merge_along_stream_m: 500.0
+
+    # How far up- and downstream to look for obstruction evidence. convention.
+    evidence_search_m: 500.0
+
+    # The cross-section examined at the blockage for the narrowing test,
+    # measured outward from the stream pixels the landslide touches.
+    #
+    # This must stay well inside evidence_search_m, and the reason is a trap
+    # found in testing: the zone grows in ALL directions, so a generous value
+    # reaches back into the water impounded upstream. The narrowing test then
+    # sees MORE water after the blockage than before and reports no narrowing
+    # at the exact moment a dam has formed. 30 m = 3 pixels. convention.
+    channel_zone_m: 30.0
+
+    # How many of the three obstruction signals must be present. The brief
+    # says "and/or", so one suffices by default -- but never zero.
+    min_evidence_types: 1
+
+    # Thresholds below which a signal is treated as absent rather than weak.
+    # 1000 m^2 = 10 pixels at 10 m. convention.
+    min_new_upstream_water_m2: 1000.0
+    min_downstream_water_loss_m2: 1000.0
+    # Fractional reduction in water width across the channel zone.
+    min_channel_narrowing_fraction: 0.3
+
+    # Confidence weights, in the same style as the Phase 11 risk score and
+    # equally conventional: no published weighting exists. Every candidate
+    # lists its contributing factors, which is the defence.
+    #
+    # New upstream water is weighted highest because it is the most direct
+    # evidence that flow is being held back rather than merely disturbed.
+    weights:
+      intersects_stream: 1.0
+      new_upstream_water: 3.0
+      downstream_water_loss: 2.0
+      channel_narrowing: 2.0
+
+    # Candidates below this confidence are discarded rather than reported.
+    min_confidence: 0.3
+
+    # Identifier format, e.g. ND-001 (brief, Section 7.6).
+    code_prefix: "ND"
+    site_type: "Potential Landslide Dam"
+
+  # ---------------------------------------------------------------------------
+  # Barrier lake detection and tracking (Phase 8)
+  # ---------------------------------------------------------------------------
+  # Brief, Section 7.7: a water body UPSTREAM of a blockage candidate, on the
+  # same stream, that is new or expanding relative to the pre-event baseline;
+  # tracked through time with stable IDs, handling merging, splitting and
+  # disappearance.
+  #
+  # The rule that governs this phase: a lake that cannot be seen has not
+  # disappeared. A barrier lake vanishing from a scene is an alarming signal --
+  # it reads as "the dam breached" -- and cloud over the lake produces exactly
+  # that appearance. Absence is only reported as disappearance when the lake's
+  # own footprint was observable. See docs/methods.md 8.3.
+  barrier_lake:
+    # Ignore water bodies below this. 1000 m^2 = 10 px at 10 m. convention.
+    min_area_m2: 1000.0
+
+    # How far upstream of the blockage to look for impounded water.
+    # convention -- a barrier lake backs up along the channel, and 2 km is a
+    # generous reach for the valley scales this prototype works at.
+    upstream_search_m: 2000.0
+
+    # A lake qualifies if it is NEW (this much water where there was none) or
+    # EXPANDING (this fraction larger than the pre-event baseline). Section 7.7
+    # requires one or the other; pre-existing, unchanged water is not a
+    # barrier lake, however close to the blockage it sits.
+    min_new_area_m2: 1000.0
+    min_expansion_fraction: 0.10
+
+    # How far from the channel impounded water may spread. A barrier lake
+    # fills the valley floor, so this must be wide enough to contain it --
+    # 300 m. convention; raise it for broad valleys.
+    lake_width_m: 300.0
+
+    # Tracking: two observations are the same lake when this fraction of the
+    # smaller one is covered by the other. convention.
+    match_min_overlap_fraction: 0.30
+
+    # Fraction of a lake's last known footprint that must be observable before
+    # its absence counts as a DISAPPEARANCE rather than a missed observation.
+    # Below this the state is "not observed" and the lake keeps its identity.
+    min_observable_fraction: 0.50
+
+    # Identifier format, e.g. BL-001.
+    code_prefix: "BL"
+
+# -----------------------------------------------------------------------------
+# Analysis (Phase 10 onward)
+# -----------------------------------------------------------------------------
+analysis:
+  # Depth and volume. Brief, Section 8 sets STRICT rules: depth is never
+  # estimated from image colour, every value is traceable to branch A, B or C,
+  # and a value that cannot be traced to a branch is never emitted.
+  depth_volume:
+    shoreline:
+      # Water surface elevation is taken from a ring just OUTSIDE the water
+      # polygon (brief, Section 8).
+      #
+      # 10 m -- one pixel -- is the default, and the narrowness is deliberate.
+      # Measured over Tsho Rolpa, the median shoreline elevation climbs with
+      # the ring width because the ring walks up the valley wall:
+      #   10 m -> 4554.69 m (IQR 10.19)
+      #   30 m -> 4559.50 m (IQR 14.67)
+      #   50 m -> 4565.42 m (IQR 23.48)
+      # That is a +10.7 m drift in the quantity depth is measured from, driven
+      # by nothing but a parameter choice. See docs/methods.md 10.3.
+      buffer_m: 10.0
+
+      # median | p25 | min
+      # The brief prescribes the median. On a steep shoreline the median of a
+      # ring is biased ABOVE the true waterline, since every sample sits
+      # upslope of it; p25 and min are offered for sensitivity testing, not as
+      # silent replacements.
+      statistic: median
+
+      # Refuse to compute a WSE from fewer samples than this -> Branch C.
+      min_samples: 20
+
+      # iqr | std | mad -- how the shoreline spread is summarised as the WSE
+      # uncertainty that Section 8 requires be stored.
+      spread_statistic: iqr
+
+    branch:
+      # Branch B test 1: the DEM is flat inside the lake.
+      #
+      # Copernicus GLO-30 FLATTENS water bodies to a constant elevation, so a
+      # DEM that recorded a water surface is bit-identical across the lake
+      # while a real valley floor never is. Measured over Tsho Rolpa: standard
+      # deviation 0.00 m across 15 501 pixels. 0.5 m is a generous tolerance
+      # around that. cited to the product behaviour, not to a paper.
+      flat_std_tolerance_m: 0.5
+
+      # Branch B test 2: the DEM product's own water-body mask covers this
+      # much of the lake.
+      dem_water_overlap_fraction: 0.5
+
+      # Branch A sanity check: if the implied mean depth is below this, the
+      # DEM and the water surface are effectively the same surface, so Branch A
+      # would be measuring noise. Falls through to Branch C.
+      # Split a mixed lake PER PIXEL with the GLO-30 height-error mask.
+      #
+      # A barrier lake routinely floods new ground AND deepens the river it
+      # dams. Over the new ground the DEM holds the pre-lake surface, so
+      # Branch A is right. Over the old channel the DEM recorded a WATER
+      # SURFACE, so the bed is unknown (Branch B) and "WSE - DEM" there
+      # measures the RISE in water level, not the depth.
+      #
+      # A GLO-30 height error of exactly zero means no height was measured --
+      # over water, the product stating it recorded a surface. On the Baige
+      # lake it reads 62.8% zero against 64.2% of the lake being pre-existing
+      # river, an independent agreement to within 1.4 points. The mask was
+      # already being read into the evidence and then discarded.
+      #
+      # With this on, Branch A covers the measured part only and the volume is
+      # reported as a LOWER BOUND -- traceable to Section 8 pixel by pixel,
+      # which summing the two parts together was not.
+      use_height_error_mask: true
+
+      # Below this Branch B fraction, treat the lake as wholly Branch A. A few
+      # scattered zero-error pixels are mask noise, not a submerged channel,
+      # and splitting on them would discard good data and label the result a
+      # lower bound for no reason. convention.
+      min_branch_b_fraction_to_split: 0.05
+
+      min_depth_for_branch_a_m: 1.0
+
+    # Per-pixel DEM vertical error. null uses the GLO-30 HEM band, which is the
+    # product's own estimate. NOTE: HEM is 0.00 m inside flattened water, which
+    # is not an accuracy claim -- it means no measurement was made there, and
+    # is itself evidence for Branch B.
+    dem_vertical_error_m: null
+
+    # Branch B empirical area-volume relationship. null = disabled.
+    #
+    # The brief (Section 8) permits one ONLY with approval and a cited formula,
+    # reported as "empirical" with wide uncertainty bounds. No formula has been
+    # approved for this project, so setting this to anything raises rather than
+    # silently producing a number that looks like a measurement.
+    branch_b_empirical_formula: null
+
+  # ---------------------------------------------------------------------------
+  # Risk indicators and warnings (Phase 11)
+  # ---------------------------------------------------------------------------
+  # Brief, Section 9: a transparent weighted score, every weight and threshold
+  # in config, and EVERY warning must list the factors behind it.
+  #
+  # These are INDICATOR levels, not predictions. The system never states that a
+  # dam will fail or when. The wording of the levels below is the brief's own
+  # and is deliberately hedged ("indicators", "verification recommended").
+  #
+  # On the weights: no published weighting exists for this combination of
+  # factors, so all of them are convention. They are reported with a
+  # sensitivity analysis (docs/methods.md 11.4) rather than presented as
+  # calibrated constants, and each assessment lists every factor's individual
+  # contribution so a level can always be traced to what produced it.
+  #
+  # The published alternative, Ermini & Casagli's Dimensionless Blockage Index
+  # (stable below 2.75, unstable above 3.08), is deliberately NOT used: it
+  # requires dam height and volume, which Branch B of Section 8 frequently
+  # makes unmeasurable. See docs/methods.md 11.5.
+  risk:
+    weights:
+      # Growth is the most direct sign that an impoundment is still filling.
+      lake_growth_rate: 3.0
+      # How much water is impounded, where Section 8 allows a number at all.
+      lake_volume: 2.0
+      # Fresh material arriving at or near the blockage.
+      new_landslide_activity: 2.0
+      # How confident the Phase 7 blockage detection is.
+      blockage_confidence: 3.0
+      # Steeper surroundings mean more potential for further failure.
+      slope: 1.0
+      # Optional in the brief; 0.0 disables it until a rainfall source is
+      # wired in, rather than pretending to a factor we do not measure.
+      rainfall: 0.0
+
+    # Each scale is [value scoring 0, value scoring 1], clamped outside.
+    # All convention. Every one of these should be revisited per catchment.
+    scales:
+      lake_growth_rate_m2_per_day: [0.0, 2000.0]
+      lake_volume_m3: [0.0, 10000000.0]
+      new_landslide_area_m2: [0.0, 50000.0]
+      blockage_confidence: [0.0, 1.0]
+      slope_deg: [15.0, 45.0]
+      rainfall_mm_24h: [0.0, 100.0]
+
+    # Score at or above which each level is reached. convention.
+    levels:
+      monitor: 0.25
+      high_risk: 0.50
+      critical: 0.75
+
+    # Below this share of the total weight being measurable, the assessment is
+    # flagged insufficient_data. An unmeasured factor must never read as
+    # reassurance: a quiet NORMAL produced from 20% of the evidence would be
+    # the most dangerous output this system could emit.
+    min_data_coverage: 0.5
+
+  # ---------------------------------------------------------------------------
+  # Temporal change (Phase 9)
+  # ---------------------------------------------------------------------------
+  # Brief, Section 7.8: a time series of lake area with absolute change, percent
+  # change and rate of change; a trend of Increasing / Decreasing / Stable /
+  # Unknown with configurable thresholds and a minimum number of valid
+  # observations; and cloudy or missing dates recorded as GAPS, never
+  # interpolated.
+  temporal_change:
+    # Below this many valid observations the trend is Unknown. Not "Stable" --
+    # too little data is not evidence of stability. Two points can always be
+    # joined by a line, which is why the default is 3.
+    min_valid_observations: 3
+
+    # relative | absolute
+    #
+    # relative is the default because an absolute m^2/day threshold means
+    # entirely different things for a 0.01 km^2 pond and a 1.6 km^2 lake, and
+    # the AOI is user-defined. The rate in m^2/day is reported either way,
+    # since the brief asks for it.
+    trend_metric: relative
+
+    # |rate| at or below this is Stable. For trend_metric: relative, a
+    # fraction of the mean area per day -- 0.001 is 0.1% per day, which is
+    # roughly a 3% change per month. convention; tune per site.
+    stable_fraction_per_day: 0.001
+    # Used when trend_metric is absolute. convention.
+    stable_rate_m2_per_day: 100.0
+
+    # theil_sen | endpoints
+    #
+    # Theil-Sen is the median of the slopes between every pair of valid
+    # observations (Sen 1968). It is robust: a single mis-segmented date -- a
+    # cloud edge counted as water, say -- shifts the median far less than it
+    # shifts a least-squares fit or an endpoint difference. cited.
+    slope_method: theil_sen
+
+    # If the most recent valid observation is older than this, the trend is
+    # reported as Unknown with a staleness reason rather than as the last
+    # trend seen. A month-old "Stable" is not a current assessment.
+    max_age_days: 60

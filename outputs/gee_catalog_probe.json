@@ -1,0 +1,164 @@
+{
+  "_aoi": {
+    "area_km2": 49.665,
+    "date_filter": [
+      "2023-10-01",
+      "2023-11-30"
+    ],
+    "kind": "point",
+    "name": "Tsho Rolpa, Rolwaling Valley, Dolakha, Nepal"
+  },
+  "dem_glo30": {
+    "band_names": [
+      "DEM",
+      "EDM",
+      "FLM",
+      "HEM",
+      "WBM"
+    ],
+    "date_filtered": false,
+    "first_acquisition": "2011-01-05T12:17:01",
+    "id": "COPERNICUS/DEM/GLO30_2024_1",
+    "image_count": 1,
+    "last_acquisition": "2011-01-05T12:17:01",
+    "sampled_images": 1
+  },
+  "landsat8_l2": {
+    "band_names": [
+      "SR_B1",
+      "SR_B2",
+      "SR_B3",
+      "SR_B4",
+      "SR_B5",
+      "SR_B6",
+      "SR_B7",
+      "SR_QA_AEROSOL",
+      "ST_B10",
+      "ST_ATRAN",
+      "ST_CDIST",
+      "ST_DRAD",
+      "ST_EMIS",
+      "ST_EMSD",
+      "ST_QA",
+      "ST_TRAD",
+      "ST_URAD",
+      "QA_PIXEL",
+      "QA_RADSAT"
+    ],
+    "date_filtered": true,
+    "first_acquisition": "2023-10-06T04:42:16",
+    "id": "LANDSAT/LC08/C02/T1_L2",
+    "image_count": 4,
+    "last_acquisition": "2023-11-23T04:42:25",
+    "sampled_images": 4
+  },
+  "landsat9_l2": {
+    "band_names": [
+      "SR_B1",
+      "SR_B2",
+      "SR_B3",
+      "SR_B4",
+      "SR_B5",
+      "SR_B6",
+      "SR_B7",
+      "SR_QA_AEROSOL",
+      "ST_B10",
+      "ST_ATRAN",
+      "ST_CDIST",
+      "ST_DRAD",
+      "ST_EMIS",
+      "ST_EMSD",
+      "ST_QA",
+      "ST_TRAD",
+      "ST_URAD",
+      "QA_PIXEL",
+      "QA_RADSAT"
+    ],
+    "date_filtered": true,
+    "first_acquisition": "2023-10-14T04:42:23",
+    "id": "LANDSAT/LC09/C02/T1_L2",
+    "image_count": 3,
+    "last_acquisition": "2023-11-15T04:42:20",
+    "sampled_images": 3
+  },
+  "s1_grd": {
+    "band_names": [
+      "VV",
+      "VH",
+      "angle"
+    ],
+    "date_filtered": true,
+    "first_acquisition": "2023-10-03T00:11:39",
+    "id": "COPERNICUS/S1_GRD",
+    "image_count": 15,
+    "instrument_modes": [
+      "IW"
+    ],
+    "last_acquisition": "2023-11-29T12:22:39",
+    "orbit_directions": [
+      "ASCENDING",
+      "DESCENDING"
+    ],
+    "relative_orbits": [
+      12,
+      85,
+      121
+    ],
+    "sampled_images": 15
+  },
+  "s2_cloud_score_plus": {
+    "band_names": [
+      "cs",
+      "cs_cdf"
+    ],
+    "date_filtered": true,
+    "first_acquisition": "2023-10-04T05:01:06",
+    "id": "GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED",
+    "image_count": 12,
+    "last_acquisition": "2023-11-28T05:01:01",
+    "sampled_images": 12
+  },
+  "s2_sr": {
+    "band_names": [
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B5",
+      "B6",
+      "B7",
+      "B8",
+      "B8A",
+      "B9",
+      "B11",
+      "B12",
+      "AOT",
+      "WVP",
+      "SCL",
+      "TCI_R",
+      "TCI_G",
+      "TCI_B",
+      "MSK_CLDPRB",
+      "MSK_SNWPRB",
+      "QA10",
+      "QA20",
+      "QA60",
+      "MSK_CLASSI_OPAQUE",
+      "MSK_CLASSI_CIRRUS",
+      "MSK_CLASSI_SNOW_ICE"
+    ],
+    "date_filtered": true,
+    "first_acquisition": "2023-10-04T05:01:06",
+    "id": "COPERNICUS/S2_SR_HARMONIZED",
+    "image_count": 12,
+    "last_acquisition": "2023-11-28T05:01:01",
+    "mgrs_tiles": [
+      "45RVL"
+    ],
+    "sampled_images": 12,
+    "solar_angles_first_image": {
+      "MEAN_SOLAR_AZIMUTH_ANGLE": 152.564835484743,
+      "MEAN_SOLAR_ZENITH_ANGLE": 35.0767184079967
+    }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "gained_water_m2": 375700.0,
+  "gained_median_dem_m": 2913.8,
+  "lost_water_m2": 308400.0,
+  "lost_median_dem_m": 2867.0,
+  "candidates": [
+    {
+      "code": "ND-001",
+      "site_px": 7,
+      "accumulation_max_cells": 332506.0,
+      "upstream_trace_px": 1785,
+      "downstream_trace_px": 78,
+      "gained_water_in_upstream_zone_m2": 215400.0,
+      "largest_lake_m2": 602200.0,
+      "lake_count": 1
+    },
+    {
+      "code": "ND-002",
+      "site_px": 10,
+      "accumulation_max_cells": 125087.0,
+      "upstream_trace_px": 1577,
+      "downstream_trace_px": 304,
+      "gained_water_in_upstream_zone_m2": 12600.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-003",
+      "site_px": 1,
+      "accumulation_max_cells": 518.0,
+      "upstream_trace_px": 0,
+      "downstream_trace_px": 1665,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-004",
+      "site_px": 20,
+      "accumulation_max_cells": 174278.0,
+      "upstream_trace_px": 1713,
+      "downstream_trace_px": 200,
+      "gained_water_in_upstream_zone_m2": 227200.0,
+      "largest_lake_m2": 369900.0,
+      "lake_count": 5
+    },
+    {
+      "code": "ND-005",
+      "site_px": 19,
+      "accumulation_max_cells": 135855.0,
+      "upstream_trace_px": 2097,
+      "downstream_trace_px": 200,
+      "gained_water_in_upstream_zone_m2": 57600.0,
+      "largest_lake_m2": 42200.0,
+      "lake_count": 4
+    },
+    {
+      "code": "ND-006",
+      "site_px": 3,
+      "accumulation_max_cells": 2503.0,
+      "upstream_trace_px": 134,
+      "downstream_trace_px": 1182,
+      "gained_water_in_upstream_zone_m2": 100.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-007",
+      "site_px": 24,
+      "accumulation_max_cells": 56484.0,
+      "upstream_trace_px": 1066,
+      "downstream_trace_px": 200,
+      "gained_water_in_upstream_zone_m2": 400.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-008",
+      "site_px": 11,
+      "accumulation_max_cells": 636.0,
+      "upstream_trace_px": 10,
+      "downstream_trace_px": 1018,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-009",
+      "site_px": 24,
+      "accumulation_max_cells": 26550.0,
+      "upstream_trace_px": 492,
+      "downstream_trace_px": 294,
+      "gained_water_in_upstream_zone_m2": 100.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-010",
+      "site_px": 46,
+      "accumulation_max_cells": 19095.0,
+      "upstream_trace_px": 429,
+      "downstream_trace_px": 280,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-011",
+      "site_px": 6,
+      "accumulation_max_cells": 16724.0,
+      "upstream_trace_px": 375,
+      "downstream_trace_px": 274,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-012",
+      "site_px": 8,
+      "accumulation_max_cells": 15729.0,
+      "upstream_trace_px": 340,
+      "downstream_trace_px": 229,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-013",
+      "site_px": 55,
+      "accumulation_max_cells": 12720.0,
+      "upstream_trace_px": 292,
+      "downstream_trace_px": 200,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    },
+    {
+      "code": "ND-014",
+      "site_px": 3,
+      "accumulation_max_cells": 655.0,
+      "upstream_trace_px": 2,
+      "downstream_trace_px": 616,
+      "gained_water_in_upstream_zone_m2": 0.0,
+      "largest_lake_m2": 0.0,
+      "lake_count": 0
+    }
+  ],
+  "most_gained_upstream": "ND-004"
+}

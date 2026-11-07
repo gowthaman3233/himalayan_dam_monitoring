@@ -1,0 +1,109 @@
+{
+  "question": "whether the agreement between impounded water and main-stem drainage survives changes to the settings that decide candidate grouping",
+  "main_stem_max_cells": 334834.0,
+  "main_stem_threshold_fraction": 0.9,
+  "variants": [
+    {
+      "variant": "shipped default",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 239500.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 90300.0
+    },
+    {
+      "variant": "merge 250 m",
+      "candidates": 5,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 231700.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 41600.0
+    },
+    {
+      "variant": "merge 750 m",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 239500.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 103300.0
+    },
+    {
+      "variant": "merge 1500 m",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 240200.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 108400.0
+    },
+    {
+      "variant": "min area 500 m2",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 239600.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 115200.0
+    },
+    {
+      "variant": "min area 2500 m2",
+      "candidates": 4,
+      "top": "ND-001",
+      "top_drainage_cells": 332506.0,
+      "top_gained_m2": 229100.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 27900.0
+    },
+    {
+      "variant": "stream reach 30 m",
+      "candidates": 4,
+      "top": "ND-001",
+      "top_drainage_cells": 333284.0,
+      "top_gained_m2": 234700.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 41000.0
+    },
+    {
+      "variant": "stream reach 100 m",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333333.0,
+      "top_gained_m2": 239800.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 116900.0
+    },
+    {
+      "variant": "evidence search 300 m",
+      "candidates": 2,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 239500.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 90300.0
+    },
+    {
+      "variant": "evidence search 800 m",
+      "candidates": 5,
+      "top": "ND-001",
+      "top_drainage_cells": 333301.0,
+      "top_gained_m2": 239500.0,
+      "top_on_main_stem": true,
+      "top_confidence": 0.75,
+      "top_landslide_area_m2": 90300.0
+    }
+  ],
+  "agreement_count": 10,
+  "variants_with_candidates": 10
+}

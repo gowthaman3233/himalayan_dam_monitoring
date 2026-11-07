@@ -1,0 +1,77 @@
+# ---- Data and outputs (never committed: large rasters, derived products) ----
+data/raw/*
+data/processed/*
+data/training/*
+data/validation/*
+!data/**/.gitkeep
+
+outputs/maps/*
+outputs/figures/*
+outputs/reports/*
+outputs/logs/*
+!outputs/**/.gitkeep
+
+# ---- Credentials ----
+.env
+*.pem
+*.key
+credentials.json
+service_account*.json
+.config/earthengine/
+
+# ---- Rasters / vectors / databases (regenerable; too large for git) ----
+*.tif
+*.tiff
+*.img
+*.vrt
+*.hdf
+*.nc
+*.jp2
+*.gpkg
+*.sqlite
+*.db
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+
+# ---- Model weights and training artefacts ----
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+runs/
+lightning_logs/
+wandb/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Notebooks ----
+.ipynb_checkpoints/
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- WhiteboxTools downloads its own binary at first use ----
+whitebox_tools/
+WBT/

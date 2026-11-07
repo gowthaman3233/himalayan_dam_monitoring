@@ -1,0 +1,251 @@
+{
+  "phase": 4,
+  "deliverable": "terrain-aware shadow rejection with per-pixel probabilities",
+  "disclaimer": "Research prototype output. Not an official warning. Verify with authoritative sources.",
+  "config_hash": "67e5f75c00fb4dd26dcbff012675dac4a77a12fe2e35f3bb54b1c4ddae18115e",
+  "aoi": {
+    "name": "Tsho Rolpa, Rolwaling Valley, Dolakha, Nepal",
+    "source": "27 deg 52' N, 86 deg 28' E (= 27.867 N, 86.467 E), 4546 m a.s.l. -- Kayastha, R. B. and Maskey, S. (2024), \"Glacial lake outburst flood (GLOF) modeling of Tsho Rolpa glacial lake, Nepal\", Proc. IAHS 387, 59-63, doi:10.5194/piahs-387-59-2024. Concordant with Shrestha, B. B. and Nakagawa, H. (2014), \"Assessment of potential outburst floods from the Tsho Rolpa glacial lake in Nepal\", Natural Hazards 71(2), which gives 27.867 N / 86.467 E, surface area 1.537 km^2, max length 3.45 km, max width 0.5 km, elevation 4580 m."
+  },
+  "inputs": {
+    "stack": "data/processed/stack_tsho_rolpa.tif",
+    "stack_run_id": "20261003T164345Z-412ba3",
+    "optical_dates": [
+      "2023-10-19",
+      "2023-10-24"
+    ],
+    "sar_scene": "S1 DESC despeckled",
+    "sar_threshold_db": -10.42,
+    "sar_threshold_source": "derived by Phase 3 tiled Otsu for this scene",
+    "evidence_used": [
+      "illumination",
+      "nir",
+      "persistence",
+      "sar_backscatter",
+      "slope",
+      "terrain_shadow_mask",
+      "water_index"
+    ]
+  },
+  "class_fractions": {
+    "land": 0.8676,
+    "water": 0.0404,
+    "terrain_shadow": 0.092
+  },
+  "uncertain_fraction": 0.0057,
+  "false_water_reduction": {
+    "baseline_px": 185417.0,
+    "baseline_area_km2": 18.5417,
+    "fused_px": 24868.0,
+    "fused_area_km2": 2.4868,
+    "retained_px": 23218.0,
+    "removed_px": 162199.0,
+    "removed_area_km2": 16.2199,
+    "added_px": 1650.0,
+    "removed_fraction_of_baseline": 0.8748,
+    "removed_as_terrain_shadow_px": 34360.0,
+    "removed_as_land_px": 127125.0,
+    "removed_as_uncertain_px": 2635.0,
+    "reference_px": 15501.0,
+    "reference_retained_fraction": 0.9644,
+    "reference_retained_fraction_baseline": 0.979
+  },
+  "what_was_removed": {
+    "note": "composition of the index-only water pixels the fusion rejected",
+    "removed_px": 162199,
+    "share_in_terrain_shadow": 0.3125,
+    "share_snow_scl11": 0.7635,
+    "share_slope_over_10deg": 0.8251,
+    "share_in_dem_water_reference": 0.002
+  },
+  "persistence": {
+    "observations": 2,
+    "dates": [
+      "2023-10-19",
+      "2023-10-24"
+    ],
+    "sun_zenith_deg": [
+      39.943,
+      41.5526878911555
+    ],
+    "sun_azimuth_deg": [
+      157.498,
+      158.686831361243
+    ],
+    "shaded_relief_iou_between_dates": 0.9327,
+    "note": "The two dates share an overpass geometry (sun angles differ by 1.6 deg zenith / 1.2 deg azimuth), so the terrain shadow barely moves and persistence does NOT discriminate shadow over this window. It discriminates cloud and speckle. See methods 4.5."
+  },
+  "ablation": {
+    "all evidence (default)": {
+      "water_km2": 2.4868,
+      "removed_fraction_of_baseline": 0.8748,
+      "reference_retained": 0.9644,
+      "uncertain_fraction": 0.0057
+    },
+    "no persistence": {
+      "water_km2": 4.1792,
+      "removed_fraction_of_baseline": 0.8193,
+      "reference_retained": 0.9662,
+      "uncertain_fraction": 0.0161
+    },
+    "without water_index": {
+      "water_km2": 2.3417,
+      "removed_fraction_of_baseline": 0.8858,
+      "reference_retained": 0.9609,
+      "uncertain_fraction": 0.0046
+    },
+    "without nir": {
+      "water_km2": 5.3363,
+      "removed_fraction_of_baseline": 0.776,
+      "reference_retained": 0.9665,
+      "uncertain_fraction": 0.0166
+    },
+    "without slope": {
+      "water_km2": 3.277,
+      "removed_fraction_of_baseline": 0.854,
+      "reference_retained": 0.9692,
+      "uncertain_fraction": 0.0208
+    },
+    "without sar_backscatter": {
+      "water_km2": 2.3341,
+      "removed_fraction_of_baseline": 0.8768,
+      "reference_retained": 0.9611,
+      "uncertain_fraction": 0.0085
+    },
+    "without illumination": {
+      "water_km2": 2.4662,
+      "removed_fraction_of_baseline": 0.8749,
+      "reference_retained": 0.9642,
+      "uncertain_fraction": 0.0072
+    },
+    "without terrain_shadow_mask": {
+      "water_km2": 2.4846,
+      "removed_fraction_of_baseline": 0.8719,
+      "reference_retained": 0.964,
+      "uncertain_fraction": 0.0051
+    }
+  },
+  "sensitivity": {
+    "water_index halved": {
+      "water_km2": 2.3793,
+      "removed_fraction_of_baseline": 0.8808,
+      "reference_retained": 0.9624,
+      "uncertain_fraction": 0.0053
+    },
+    "water_index doubled": {
+      "water_km2": 4.3296,
+      "removed_fraction_of_baseline": 0.8011,
+      "reference_retained": 0.9678,
+      "uncertain_fraction": 0.0083
+    },
+    "nir halved": {
+      "water_km2": 3.6119,
+      "removed_fraction_of_baseline": 0.8292,
+      "reference_retained": 0.9657,
+      "uncertain_fraction": 0.0086
+    },
+    "nir doubled": {
+      "water_km2": 2.7344,
+      "removed_fraction_of_baseline": 0.8678,
+      "reference_retained": 0.9639,
+      "uncertain_fraction": 0.0037
+    },
+    "slope halved": {
+      "water_km2": 2.7331,
+      "removed_fraction_of_baseline": 0.8638,
+      "reference_retained": 0.9663,
+      "uncertain_fraction": 0.0081
+    },
+    "slope doubled": {
+      "water_km2": 2.1973,
+      "removed_fraction_of_baseline": 0.8897,
+      "reference_retained": 0.9575,
+      "uncertain_fraction": 0.0019
+    },
+    "sar_backscatter halved": {
+      "water_km2": 2.4037,
+      "removed_fraction_of_baseline": 0.8756,
+      "reference_retained": 0.9625,
+      "uncertain_fraction": 0.0055
+    },
+    "sar_backscatter doubled": {
+      "water_km2": 3.9066,
+      "removed_fraction_of_baseline": 0.8222,
+      "reference_retained": 0.9683,
+      "uncertain_fraction": 0.007
+    },
+    "persistence halved": {
+      "water_km2": 2.9203,
+      "removed_fraction_of_baseline": 0.8593,
+      "reference_retained": 0.9657,
+      "uncertain_fraction": 0.012
+    },
+    "persistence doubled": {
+      "water_km2": 2.477,
+      "removed_fraction_of_baseline": 0.8715,
+      "reference_retained": 0.9643,
+      "uncertain_fraction": 0.0034
+    },
+    "illumination halved": {
+      "water_km2": 2.4815,
+      "removed_fraction_of_baseline": 0.8747,
+      "reference_retained": 0.9644,
+      "uncertain_fraction": 0.0251
+    },
+    "illumination doubled": {
+      "water_km2": 2.4957,
+      "removed_fraction_of_baseline": 0.8748,
+      "reference_retained": 0.9646,
+      "uncertain_fraction": 0.0026
+    },
+    "terrain_shadow_mask halved": {
+      "water_km2": 2.5157,
+      "removed_fraction_of_baseline": 0.8729,
+      "reference_retained": 0.9643,
+      "uncertain_fraction": 0.0039
+    },
+    "terrain_shadow_mask doubled": {
+      "water_km2": 2.4152,
+      "removed_fraction_of_baseline": 0.8787,
+      "reference_retained": 0.9646,
+      "uncertain_fraction": 0.0136
+    },
+    "material_determinacy_weight = 1.0": {
+      "water_km2": 2.4286,
+      "removed_fraction_of_baseline": 0.8773,
+      "reference_retained": 0.9642,
+      "uncertain_fraction": 0.0076
+    },
+    "material_determinacy_weight = 3.0": {
+      "water_km2": 2.5398,
+      "removed_fraction_of_baseline": 0.8722,
+      "reference_retained": 0.9646,
+      "uncertain_fraction": 0.0029
+    }
+  },
+  "sensitivity_summary": {
+    "note": "Weights are convention. Every variant below halves or doubles one weight; the spread shows how much the conclusion depends on them.",
+    "removed_fraction_min": 0.8011,
+    "removed_fraction_max": 0.8897,
+    "reference_retained_min": 0.9575,
+    "reference_retained_max": 0.9683
+  },
+  "water_bodies": {
+    "count": 87,
+    "largest_km2": 1.6142,
+    "largest_centroid": [
+      86.47715,
+      27.86039
+    ]
+  },
+  "reference": {
+    "dem_wbm_area_km2": 1.5501,
+    "published_area_km2": 1.537,
+    "note": "independent observations, not ground truth"
+  },
+  "value_types": {
+    "p_water / p_terrain_shadow / p_land": "classified",
+    "areas": "derived",
+    "sar_threshold_db": "derived"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "match_min_overlap_fraction": 0.3,
+  "per_lake_11_09_to_11_19": [
+    {
+      "rank": 1,
+      "area_m2": 160000.0,
+      "best_overlap_fraction": 0.0,
+      "matched": false,
+      "footprint_px": 1600,
+      "observable_px": 1600,
+      "still_water_px": 655,
+      "still_water_fraction": 0.4094
+    },
+    {
+      "rank": 2,
+      "area_m2": 2800.0,
+      "best_overlap_fraction": 0.0,
+      "matched": false,
+      "footprint_px": 28,
+      "observable_px": 28,
+      "still_water_px": 1,
+      "still_water_fraction": 0.0357
+    },
+    {
+      "rank": 3,
+      "area_m2": 2600.0,
+      "best_overlap_fraction": 0.0,
+      "matched": false,
+      "footprint_px": 26,
+      "observable_px": 26,
+      "still_water_px": 17,
+      "still_water_fraction": 0.6538
+    },
+    {
+      "rank": 4,
+      "area_m2": 1400.0,
+      "best_overlap_fraction": 0.0,
+      "matched": false,
+      "footprint_px": 14,
+      "observable_px": 14,
+      "still_water_px": 0,
+      "still_water_fraction": 0.0
+    }
+  ],
+  "union_overlap_px": 0,
+  "union_11_09_px": 1668,
+  "union_11_09_still_water_on_11_19_px": 673
+}

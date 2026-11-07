@@ -1,0 +1,25 @@
+# Tooling configuration. The project is run from the repository root; it is not
+# packaged for distribution, so there is no [project] / build-system section.
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+
+# Put the repository root on sys.path so tests can do `from config.schema import ...`
+pythonpath = ["."]
+
+# --strict-markers: an unregistered marker is an error, not a silent typo.
+addopts = "-ra --strict-markers --strict-config"
+
+markers = [
+    "gee: requires an authenticated Google Earth Engine session (skipped otherwise)",
+    "network: requires internet access",
+    "slow: long-running test",
+    "synthetic: uses small hand-made arrays/geometries, NOT real satellite data",
+    "realdata: asserts against real imagery from a documented location",
+]
+
+filterwarnings = [
+    "error::DeprecationWarning:config.*",
+    "error::DeprecationWarning:utils.*",
+]

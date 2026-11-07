@@ -1,0 +1,21 @@
+{
+  "dam": {
+    "lon": 98.70499,
+    "lat": 31.08234,
+    "dem_elevation_m": 3373.9
+  },
+  "gained_water": {
+    "px": 3757,
+    "km2": 0.3757,
+    "dem_median_m": 2913.8,
+    "dem_median_minus_dam_m": -460.1,
+    "fraction_above_dam_elevation": 0.0146
+  },
+  "lost_water": {
+    "px": 3084,
+    "km2": 0.3084,
+    "dem_median_m": 2867.0,
+    "dem_median_minus_dam_m": -506.9,
+    "fraction_above_dam_elevation": 0.0
+  }
+}

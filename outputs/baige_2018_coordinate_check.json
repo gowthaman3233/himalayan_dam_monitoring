@@ -1,0 +1,14 @@
+{
+  "published_coordinate": {
+    "lon": 98.70499,
+    "lat": 31.08234
+  },
+  "dem_elevation_m": 3373.9,
+  "slope_deg": 52.9,
+  "pre_event_water_median_elevation_m": 2870.3,
+  "horizontal_distance_to_nearest_water_m": 626.1,
+  "drop_to_river_m": 471.0,
+  "local_relief_150m_m": 241.0,
+  "local_median_slope_deg": 41.3,
+  "interpretation": "The published coordinate lies on the valley side, several hundred metres above the Jinsha water surface. It marks the landslide body or source area on the right bank, not the blockage point in the channel."
+}

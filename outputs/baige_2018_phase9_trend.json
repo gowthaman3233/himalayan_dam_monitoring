@@ -1,0 +1,60 @@
+{
+  "lake": "BL-001",
+  "dam_candidate": "ND-001",
+  "floodable_zone_px": 49133,
+  "floodable_ceiling_dem_m": 3601.4,
+  "observability_threshold": 0.5,
+  "dates": [
+    {
+      "date": "2018-11-02",
+      "scene": "S2_47RMQ_20181102T041940",
+      "floodable_zone_observable_fraction": 1.0,
+      "lake_area_m2": 0.0,
+      "status": "pre-event (not part of the lake series)"
+    },
+    {
+      "date": "2018-11-09",
+      "scene": "S2_47RMQ_20181109T040948",
+      "floodable_zone_observable_fraction": 0.652,
+      "lake_area_m2": 602200.0,
+      "status": "measurement (lower bound: 35% of zone unseen)"
+    },
+    {
+      "date": "2018-11-19",
+      "scene": "S2_47RMQ_20181119T040944",
+      "floodable_zone_observable_fraction": 0.692,
+      "lake_area_m2": 421900.0,
+      "status": "measurement (lower bound: 31% of zone unseen)"
+    },
+    {
+      "date": "2018-11-22",
+      "scene": "S2_47RMQ_20181122T041940",
+      "floodable_zone_observable_fraction": 1.0,
+      "lake_area_m2": 431500.0,
+      "status": "measurement"
+    }
+  ],
+  "trend": {
+    "trend": "Decreasing",
+    "n_valid": 3,
+    "n_gaps": 0,
+    "method": "theil_sen slope, relative threshold (|-0.02706|/day vs 0.001/day of mean area)",
+    "reason": null,
+    "first_date": "2018-11-09",
+    "last_date": "2018-11-22",
+    "span_days": 13,
+    "first_area_m2": 602200.0,
+    "last_area_m2": 431500.0,
+    "absolute_change_m2": -170700.0,
+    "percent_change": -28.346064430421787,
+    "rate_m2_per_day": -13130.76923076923,
+    "fractional_rate_per_day": -0.02706259115987063,
+    "gaps": []
+  },
+  "pairwise_slopes_m2_per_day": [
+    -18030.0,
+    -13130.8,
+    3200.0
+  ],
+  "reference_date_note": "staleness judged against the last observation; retrospective validation, not a live assessment"
+}

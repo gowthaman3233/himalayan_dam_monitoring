@@ -1,0 +1,160 @@
+{
+  "published_point_dem_m": 3373.9,
+  "pre_event_water_median_dem_m": 2870.3,
+  "in_channel_tolerance_m": 40.0,
+  "candidates": [
+    {
+      "dam_code": "ND-006",
+      "confidence": 0.75,
+      "distance_to_published_point_m": 702.8,
+      "centroid_dem_m": 2922.5,
+      "metres_above_pre_event_water": 52.2,
+      "has_new_upstream_water": true,
+      "in_channel": false,
+      "verdict": "off-channel, but water gained nearby"
+    },
+    {
+      "dam_code": "ND-005",
+      "confidence": 1.0,
+      "distance_to_published_point_m": 769.7,
+      "centroid_dem_m": 2870.5,
+      "metres_above_pre_event_water": 0.2,
+      "has_new_upstream_water": true,
+      "in_channel": true,
+      "verdict": "DAM-LIKE (in channel, water held back)"
+    },
+    {
+      "dam_code": "ND-004",
+      "confidence": 0.5,
+      "distance_to_published_point_m": 1763.1,
+      "centroid_dem_m": 2906.5,
+      "metres_above_pre_event_water": 36.2,
+      "has_new_upstream_water": true,
+      "in_channel": true,
+      "verdict": "DAM-LIKE (in channel, water held back)"
+    },
+    {
+      "dam_code": "ND-007",
+      "confidence": 1.0,
+      "distance_to_published_point_m": 1848.8,
+      "centroid_dem_m": 2877.6,
+      "metres_above_pre_event_water": 7.3,
+      "has_new_upstream_water": true,
+      "in_channel": true,
+      "verdict": "DAM-LIKE (in channel, water held back)"
+    },
+    {
+      "dam_code": "ND-003",
+      "confidence": 0.75,
+      "distance_to_published_point_m": 1861.7,
+      "centroid_dem_m": 3182.4,
+      "metres_above_pre_event_water": 312.1,
+      "has_new_upstream_water": true,
+      "in_channel": false,
+      "verdict": "off-channel, but water gained nearby"
+    },
+    {
+      "dam_code": "ND-009",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 2465.5,
+      "centroid_dem_m": 2867.8,
+      "metres_above_pre_event_water": -2.5,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    },
+    {
+      "dam_code": "ND-008",
+      "confidence": 0.375,
+      "distance_to_published_point_m": 2708.3,
+      "centroid_dem_m": 3173.0,
+      "metres_above_pre_event_water": 302.7,
+      "has_new_upstream_water": false,
+      "in_channel": false,
+      "verdict": "off-channel"
+    },
+    {
+      "dam_code": "ND-002",
+      "confidence": 0.5,
+      "distance_to_published_point_m": 2724.9,
+      "centroid_dem_m": 2942.0,
+      "metres_above_pre_event_water": 71.7,
+      "has_new_upstream_water": true,
+      "in_channel": false,
+      "verdict": "off-channel, but water gained nearby"
+    },
+    {
+      "dam_code": "ND-001",
+      "confidence": 0.5,
+      "distance_to_published_point_m": 3029.1,
+      "centroid_dem_m": 2948.1,
+      "metres_above_pre_event_water": 77.8,
+      "has_new_upstream_water": true,
+      "in_channel": false,
+      "verdict": "off-channel, but water gained nearby"
+    },
+    {
+      "dam_code": "ND-010",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 3188.1,
+      "centroid_dem_m": 2870.1,
+      "metres_above_pre_event_water": -0.2,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    },
+    {
+      "dam_code": "ND-011",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 3306.2,
+      "centroid_dem_m": 2904.9,
+      "metres_above_pre_event_water": 34.6,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    },
+    {
+      "dam_code": "ND-013",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 3602.8,
+      "centroid_dem_m": 2866.1,
+      "metres_above_pre_event_water": -4.2,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    },
+    {
+      "dam_code": "ND-012",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 3620.2,
+      "centroid_dem_m": 2901.4,
+      "metres_above_pre_event_water": 31.1,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    },
+    {
+      "dam_code": "ND-014",
+      "confidence": 0.625,
+      "distance_to_published_point_m": 3661.6,
+      "centroid_dem_m": 2875.4,
+      "metres_above_pre_event_water": 5.1,
+      "has_new_upstream_water": false,
+      "in_channel": true,
+      "verdict": "drained channel (in channel, nothing impounded)"
+    }
+  ],
+  "dam_like": [
+    "ND-005",
+    "ND-004",
+    "ND-007"
+  ],
+  "drained_channel": [
+    "ND-009",
+    "ND-010",
+    "ND-011",
+    "ND-013",
+    "ND-012",
+    "ND-014"
+  ]
+}

@@ -1,0 +1,83 @@
+# =============================================================================
+# Validation event B -- Baige landslide dam, Jinsha River, Tibet
+# =============================================================================
+# Confirmed by the repository owner on 2026-10-26; see docs/validation.md §2.2
+# for the full record, the sources and the known weaknesses.
+#
+# This is an OVERLAY, not a complete configuration. It is merged over
+# config/config.yaml by config.loader.load_config_with_overlay, so that every
+# threshold in the project stays single-sourced. Copying the whole config per
+# site would duplicate those thresholds, and the duplicates would drift the
+# first time one was tuned.
+#
+#   from config.loader import load_config_with_overlay
+#   cfg = load_config_with_overlay("baige_2018")
+#
+# NOTE ON THE CRS: this AOI centroid falls in UTM zone 47N (EPSG:32647),
+# outside Nepal's 32644/32645. That is deliberate and useful -- it exercises
+# the brief's Section 6 requirement that the projection is derived from the
+# AOI, never assumed, and would catch any Nepal assumption that has crept into
+# the code paths.
+# =============================================================================
+
+aoi:
+  kind: point
+  name: "Baige landslide dam, Jinsha River, Jiangda County, Tibet"
+  # 31 deg 04' 56.41" N, 98 deg 42' 17.98" E, as published.
+  #
+  # WHAT THIS COORDINATE IS. Checked against the DEM (see docs/methods.md
+  # 5.13): it sits at 3373.9 m on a 52.9 deg slope, 626 m horizontally from
+  # the nearest water and 471 m ABOVE the Jinsha surface (median 2870.3 m).
+  # It is therefore the landslide SOURCE AREA on the right bank, NOT the
+  # blockage point in the channel. Use it as a landslide location only. Any
+  # code needing the channel blockage point must derive it from the imagery
+  # (the boundary between water gained upstream and water lost downstream),
+  # never from this value.
+  lon: 98.70499
+  lat: 31.08234
+  # 3 km radius (~28 km^2), sized for the GATE rather than for the full lake.
+  #
+  # A 6 km radius was tried first and is wrong on two counts. It gives
+  # 111.7 km^2, which breaks the "tens of km^2" local-processing budget the
+  # brief sets in Section 3; and the resulting 27 MB six-band export did not
+  # finish inside the time available, so nothing was acquired at all.
+  #
+  # 3 km covers the blockage and several kilometres of impounded valley --
+  # enough to detect the dam, the new upstream water and the downstream loss,
+  # which is what Phases 5, 7 and 8 are gated on. It does NOT cover the full
+  # reported extent of the second lake, which backed up far further upstream,
+  # so any area or volume measured here is of the near-field impoundment only
+  # and must be reported as such, never as the lake's total size.
+  buffer_m: 3000.0
+  source: >-
+    31 deg 04' 56.41" N, 98 deg 42' 17.98" E -- right bank of the Jinsha
+    River, Jiangda County, Tibet Autonomous Region, on the Tibet-Sichuan
+    border. Two successive landslide dams, 2018-10-10 and 2018-11-03; the
+    second impounded a lake reported at 105e6 m^3, released through an
+    engineered channel on 2018-11-13. Sources (see docs/validation.md 2.2):
+    "Study on successive landslide damming events of Jinsha River in Baige
+    village on October 11 and November 3, 2018", Journal of Engineering
+    Geology; "Hydro-sediment-morphodynamic processes of the Baige
+    landslide-induced barrier lake, Jinsha River, China", Journal of
+    Hydrology; "Using a single remote-sensing image to calculate the height of
+    a landslide dam and the maximum volume of a lake", NHESS 22, 2081-2098,
+    2022. Published volume figures CONFLICT across sources (105 vs 500 vs
+    775 e6 m^3) and must be quoted as a range, never as a single number.
+
+dates:
+  # Spans both failures and the engineered release, so a pre/post pair can be
+  # chosen deliberately. The brief's Section 7.4 change detection needs a
+  # genuinely pre-event baseline, and the FIRST dam (2018-10-10) would
+  # contaminate a baseline chosen after it -- pick pre-dates before October.
+  query_window:
+    start: "2018-09-01"
+    end: "2018-11-30"
+
+acquisition:
+  # A 113 km^2 AOI over a two-month window returns many scenes; this AOI is
+  # larger than the default, so the per-sensor cap is raised to give the
+  # bi-temporal pair and the lake time series something to choose from.
+  max_scenes_per_sensor: 8
+  # The Jinsha gorge in autumn is clearer than monsoon Nepal, but this is
+  # still deep-valley terrain. Left at the project default rather than
+  # loosened, so cloudy scenes are rejected and counted rather than used.

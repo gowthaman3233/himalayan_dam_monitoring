@@ -1,0 +1,121 @@
+# Conda environment for the Himalayan landslide-dam / barrier-lake monitoring prototype.
+#
+# Scope: this file holds the CORE stack needed for Phases 0-5. Heavier
+# dependencies are added at the phase that first uses them, so that an install
+# failure in (say) the PDF stack cannot block early work:
+#   Phase 2  -> whitebox (WhiteboxTools: flow routing, stream network), scipy
+#   Phase 3  -> scikit-image (test-only: cross-checks this project's Otsu)
+#   Phase 6  -> torch (CPU-only locally, for shape/gradient tests; training
+#               happens on Colab), segmentation-models-pytorch (the brief's
+#               named baseline) and scikit-learn. The latter two are declared
+#               but not required to import: models/unet.py degrades with a
+#               clear error, so the rest of the project runs without them.
+#   Phase 12 -> streamlit, streamlit-folium (folium and plotly arrive with geemap)
+#   Phase 13 -> jinja2 (weasyprint installs but cannot import on Windows:
+#               it needs GTK/Pango. PDFs fall back to headless Edge/Chrome,
+#               which needs no install. See docs/methods.md 13.2)
+#
+# GDAL and rasterio come from conda-forge, never pip (per project brief, Section 3).
+#
+# Create with:
+#   conda env create -f environment.yml
+#   conda activate himalaya
+
+name: himalaya
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - python=3.11
+
+  # ---- Raster I/O and arrays ----
+  - gdal
+  - rasterio
+  - rioxarray
+  - xarray
+  - numpy
+
+  # ---- Vector geometry ----
+  - geopandas
+  - shapely
+  - pyproj
+  - fiona
+
+  # pandas arrives as a geopandas dependency; it is listed explicitly so that
+  # its version can be pinned where needed. On Windows machines with Smart App
+  # Control enabled, the newest pandas binaries are blocked by the OS and an
+  # older, widely-deployed build must be used instead -- see README,
+  # "Windows Smart App Control".
+  - pandas
+  - pytz
+
+  # ---- Earth Engine data access ----
+  - earthengine-api
+  - geemap
+
+  # ---- Configuration ----
+  - pyyaml
+  - pydantic>=2.6
+  - python-dotenv
+
+  # ---- Terrain hydrology (Phase 2) ----
+  # Flow routing and the stream network. Downloads its own WhiteboxTools
+  # binary on first use.
+  - whitebox
+
+  # ---- Numerics ----
+  # scipy: binary morphology for the cloud-mask dilation (Phase 2).
+  # scikit-image: used ONLY by the test suite, to cross-check this project's
+  # own Otsu implementation against threshold_otsu. The detector itself
+  # computes the threshold from the histogram with numpy and does not import
+  # it, so a blocked scikit-image build skips a test rather than breaking the
+  # pipeline.
+  - scipy
+  - scikit-image
+
+  # ---- Plotting (quick-look maps written to outputs/) ----
+  # NOTE: on this machine matplotlib's *renderer* is blocked by Windows Smart
+  # App Control -- savefig crashes with STATUS_DELAY_LOAD_FAILED (0xC06D007F)
+  # when freetype delay-loads. Colormap lookup is pure numpy and still works.
+  # See README, "Windows Smart App Control", and docs/validation.md 7.
+  - matplotlib
+  - pillow
+
+  # ---- Testing ----
+  - pytest
+  - pytest-cov
+
+  # ---- Convenience ----
+  - tqdm
+  - pip
+
+  # ---- Dashboard (Phase 12) ----
+  # folium and plotly arrive as geemap dependencies; these two do not.
+  # Installed with pip into the conda env: both are pure-Python wheels, and
+  # pip resolved them in one pass where the conda solver would be slower.
+  - pip:
+      - streamlit
+      - streamlit-folium
+      # Phase 13. jinja2 arrives with other packages; pypdf is test-only,
+      # used to verify the generated PDF's text rather than to make it.
+      - pypdf
+      # Phase 6. CPU-only build: local tests cover shapes, gradients and
+      # metrics; training belongs on Colab (brief, Section 3 -- no local GPU
+      # is assumed). Install with:
+      #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - torch
+      # Phase 6, the brief's named baseline (Section 7.5 and the stack table).
+      # Declared here so a Colab clone installs it, but models/unet.py raises a
+      # clear BaselineUNetError if it is absent rather than failing on import,
+      # so every other phase still runs without it. The controlled ablation --
+      # models.attention_unet.plain_unet -- needs nothing beyond torch.
+      - segmentation-models-pytorch
+      # Phase 6. Used for the geographic block split and the metric
+      # cross-checks, not for any model.
+      - scikit-learn
+      # Phase 6. Landslide4Sense ships HDF5, so models/landslide4sense.py
+      # needs this to read it. Like smp, its absence raises a clear error
+      # rather than breaking an import, so every other phase runs without it.
+      - h5py

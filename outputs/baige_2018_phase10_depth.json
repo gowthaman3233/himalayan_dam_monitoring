@@ -1,0 +1,47 @@
+{
+  "lake": "BL-001",
+  "obs_date": "2018-11-09",
+  "dem_epoch_end": "2014-09-11",
+  "lake_px": 6022,
+  "lake_area_m2": 602200.0,
+  "newly_flooded_px": 2154,
+  "newly_flooded_area_m2": 215400.0,
+  "pre_existing_river_px": 3868,
+  "pre_existing_river_area_m2": 386800.0,
+  "glo30_water_mask_fraction_of_lake": 0.0201,
+  "dem_sd_inside_lake_m": 32.504,
+  "hem_zero_fraction_inside_lake": 0.628,
+  "shipped_result": {
+    "branch": "A",
+    "value_type": "estimated",
+    "reason": "the lake was first observed on 2018-11-09, after the DEM epoch ended on 2014-09-11, and the DEM inside the lake is not flat (sd 32.50 m), so it records the pre-lake valley floor The GLO-30 height-error mask is zero over 62.8% of the lake, so the DEM recorded a water surface there and those pixels are Branch B. Depth and volume cover the rest only, and the volume is therefore a LOWER BOUND on the impoundment: it omits whatever the river already held below its DEM-epoch surface.",
+    "mean_depth_m": 40.495072392054965,
+    "max_depth_m": 76.2021484375,
+    "volume_m3": 9070896.215820312,
+    "evidence": {
+      "dem_std_inside_m": 32.50429510622063,
+      "dem_median_inside_m": 2886.84326171875,
+      "dem_water_mask_overlap": 0.020092992361341745,
+      "zero_height_error_fraction": 0.6280305546330123,
+      "lake_first_observed": "2018-11-09",
+      "dem_epoch_end": "2014-09-11",
+      "lake_postdates_dem": true,
+      "implied_mean_depth_m": 57.34008675546434,
+      "branch_b_fraction": 0.6280305546330123,
+      "height_error_split_applied": true,
+      "measured_px": 2240,
+      "volume_is_lower_bound": true
+    }
+  },
+  "wse": {
+    "wse_m": 2946.33,
+    "spread_m": 24.61,
+    "samples": 734
+  },
+  "branch_a_lower_bound_on_newly_flooded_only_m3": 6336602.5,
+  "published_lake_volume_range_m3": [
+    105000000.0,
+    775000000.0
+  ],
+  "comparison_note": "NOT comparable: the AOI truncates the lake and the bound omits the pre-dam river's own depth (Branch B)."
+}

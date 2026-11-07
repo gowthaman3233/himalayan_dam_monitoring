@@ -1,0 +1,52 @@
+{
+  "block_km": 10.0,
+  "buffer_m": 2560.0,
+  "patch_m": 2560.0,
+  "block_interior_km2": 23.81,
+  "baige_aoi_km2": 28,
+  "simulation": [
+    {
+      "sites": 1,
+      "train": 9,
+      "val": 0,
+      "test": 0,
+      "usable": false
+    },
+    {
+      "sites": 2,
+      "train": 9,
+      "val": 0,
+      "test": 9,
+      "usable": false
+    },
+    {
+      "sites": 3,
+      "train": 9,
+      "val": 9,
+      "test": 9,
+      "usable": true
+    },
+    {
+      "sites": 4,
+      "train": 18,
+      "val": 9,
+      "test": 9,
+      "usable": true
+    },
+    {
+      "sites": 6,
+      "train": 36,
+      "val": 9,
+      "test": 9,
+      "usable": true
+    },
+    {
+      "sites": 10,
+      "train": 63,
+      "val": 18,
+      "test": 9,
+      "usable": true
+    }
+  ],
+  "minimum_separated_sites": 3
+}

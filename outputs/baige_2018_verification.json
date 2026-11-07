@@ -1,0 +1,30 @@
+{
+  "published_dam": {
+    "lon": 98.70499,
+    "lat": 31.08234
+  },
+  "polygons": 50,
+  "total_change_m2": 117300.0,
+  "nearest_polygon_m": 132.2,
+  "polygons_within": {
+    "250 m": 2,
+    "500 m": 4,
+    "1000 m": 8,
+    "2000 m": 12
+  },
+  "area_within_m2": {
+    "250 m": 2200.0,
+    "500 m": 15200.0,
+    "1000 m": 20200.0,
+    "2000 m": 27000.0
+  },
+  "fraction_within_500m": 0.1296,
+  "largest": {
+    "area_m2": 13200.0,
+    "distance_to_dam_m": 3602.8,
+    "ndvi_pre": -0.4011,
+    "ndvi_post": -0.0214,
+    "vv_pre_db": -13.77,
+    "vv_post_db": -6.37
+  }
+}

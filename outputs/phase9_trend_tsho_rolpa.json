@@ -1,0 +1,33 @@
+{
+  "site": "Tsho Rolpa, Rolwaling Valley, Dolakha, Nepal",
+  "observations": [
+    {
+      "date": "2023-10-19",
+      "area_m2": 1600500.0,
+      "unusable_pixel_percent": 7.0
+    },
+    {
+      "date": "2023-10-24",
+      "area_m2": 1297700.0,
+      "unusable_pixel_percent": 13.11
+    }
+  ],
+  "trend": {
+    "trend": "Unknown",
+    "n_valid": 2,
+    "n_gaps": 0,
+    "method": "theil_sen",
+    "reason": "only 2 valid observation(s) and 0 gap(s); 3 valid are required. Too little data is not evidence of stability",
+    "first_date": null,
+    "last_date": null,
+    "span_days": null,
+    "first_area_m2": null,
+    "last_area_m2": null,
+    "absolute_change_m2": null,
+    "percent_change": null,
+    "rate_m2_per_day": null,
+    "fractional_rate_per_day": null,
+    "gaps": []
+  },
+  "note": "Two Sentinel-2 dates five days apart. The trend is Unknown because the configured minimum is three valid observations; this is the correct answer, not a failure."
+}

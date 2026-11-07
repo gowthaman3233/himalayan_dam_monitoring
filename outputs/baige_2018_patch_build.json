@@ -1,0 +1,21 @@
+{
+  "patches_written": 41,
+  "skipped_below_min_labelled_fraction": 23,
+  "skipped_no_data": 0,
+  "class_pixels": {
+    "background": 113662,
+    "water": 24834,
+    "landslide": 5971,
+    "terrain_shadow": 104358,
+    "snow_ice": 3536
+  },
+  "ignored_pixels": 419383,
+  "class_fractions": {
+    "background": 0.1692,
+    "water": 0.03697,
+    "landslide": 0.00889,
+    "terrain_shadow": 0.15535,
+    "snow_ice": 0.00526
+  },
+  "out_dir": "C:\\Users\\Gowtham\\Downloads\\Project\\himalayan_dam_monitoring\\data\\processed\\baige_demo_patches"
+}

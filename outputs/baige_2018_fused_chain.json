@@ -1,0 +1,34 @@
+{
+  "supersedes": "the whole-array comparison in outputs/baige_2018_fusion_check.json",
+  "why": "40.1% of the scene is optical nodata; the Phase 3 mask is empty there by construction and the fusion fills it from SAR, so a whole-array comparison is not like for like",
+  "snow_handling": "snow screened as an invalid observation, not voted on, because MNDWI is identical to NDSI",
+  "persistence_dates": [
+    "2018-11-02",
+    "2018-11-09",
+    "2018-11-19",
+    "2018-11-22"
+  ],
+  "sar_threshold_db": -8.65,
+  "per_date": {
+    "2018-11-02": {
+      "snow_px": 555,
+      "optically_usable_px": 358246,
+      "phase3_water_px": 8045,
+      "phase4_water_px": 7850,
+      "removed_px": 807,
+      "added_px": 612,
+      "removed_in_terrain_shadow_fraction": 0.347
+    },
+    "2018-11-09": {
+      "snow_px": 4491,
+      "optically_usable_px": 210117,
+      "phase3_water_px": 8718,
+      "phase4_water_px": 7663,
+      "removed_px": 1792,
+      "added_px": 737,
+      "removed_in_terrain_shadow_fraction": 0.293
+    }
+  },
+  "lake_on_fused_water_m2": 478300.0,
+  "lake_on_unfused_water_m2": 602200.0
+}

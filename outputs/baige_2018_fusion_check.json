@@ -1,0 +1,24 @@
+{
+  "scene": "S2_47RMQ_20181109T040948",
+  "sun_zenith_deg": 50.0815177920521,
+  "sun_azimuth_deg": 161.174680325524,
+  "phase3_water_px": 8718,
+  "phase3_water_km2": 0.8718,
+  "phase4_fused_water_px": 31041,
+  "phase4_fused_water_km2": 3.1041,
+  "removed_px": 3264,
+  "removed_fraction_of_phase3": 0.3744,
+  "added_px": 25587,
+  "terrain_shadow_px": 64636,
+  "sar_threshold_db": -8.65,
+  "pre_dam_river_dem_m": 2870.3,
+  "phase3_px_above_river_plus_120m": 56,
+  "phase3_dem_range_m": [
+    2800.4,
+    4222.3
+  ],
+  "phase4_dem_range_m": [
+    2800.4,
+    4601.8
+  ]
+}

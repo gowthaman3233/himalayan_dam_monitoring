@@ -1,0 +1,131 @@
+# =============================================================================
+# Config overlay for a Landslide4Sense 2022 training run (Phase 6)
+# =============================================================================
+# Merged over config/config.yaml. Use with:
+#
+#     from config.loader import load_config_with_overlay
+#     cfg = load_config_with_overlay("config/landslide4sense.yaml")
+#
+# WHY THIS OVERLAY EXISTS
+#
+# Landslide4Sense is real, independently produced, CC BY 4.0 labelled data,
+# which makes it the only route to the brief's required plain-U-Net versus
+# Attention-U-Net comparison without hand labelling. But it disagrees with
+# this project's defaults in three ways that must be declared rather than
+# worked around, and each one costs something.
+#
+# WHAT THIS RUN CANNOT ANSWER
+#
+# The dataset's masks are BINARY: landslide and not-landslide. It labels
+# neither water nor terrain shadow, so the brief's PRIMARY result -- the
+# water-versus-shadow confusion -- cannot be produced from it at any sample
+# size. Classes 1, 3 and 4 will have zero pixels and their IoU will read 0.00
+# for want of data, not through any failure of the architecture. Only
+# hand-labelled Himalayan patches can close that gap.
+#
+# ATTRIBUTION (required by CC BY 4.0)
+#
+#   Ghorbanzadeh, O., Xu, Y., Ghamisi, P., Kopp, M. and Kreil, D. (2022),
+#   "Landslide4Sense: Reference Benchmark Data and Deep Learning Models for
+#   Landslide Detection", IEEE Transactions on Geoscience and Remote Sensing
+#   60, 1-17. Data: https://zenodo.org/records/10463239
+# =============================================================================
+
+models:
+  # ---------------------------------------------------------------------------
+  # 1. A REDUCED CHANNEL STACK: eleven of the project's fifteen.
+  #
+  # The dataset ships Sentinel-2 B1-B12, a DEM and an ALOS PALSAR slope layer.
+  # It has NO Sentinel-1, and no illumination or terrain-shadow layer -- those
+  # need per-scene sun angles the dataset does not carry.
+  #
+  # The four missing channels are REMOVED rather than zero-filled. A zero
+  # channel is not a measurement, and filling one would teach the model that
+  # "no data" is a valid value for real terrain -- the same mistake that put
+  # Phase 4 water over scene edges (docs/methods.md 10.13.2).
+  #
+  # Consequence worth stating: a model trained here has never seen SAR or a
+  # shadow mask, so it cannot be applied to a full 15-channel stack. The
+  # checkpoint records its channels and models/predict.py refuses the mismatch.
+  # ---------------------------------------------------------------------------
+  channels:
+    - S2_B2
+    - S2_B3
+    - S2_B4
+    - S2_B8
+    - S2_B11
+    - S2_B12
+    - NDWI
+    - MNDWI
+    - NDVI
+    - DEM
+    - SLOPE
+
+  patch:
+    # ---------------------------------------------------------------------------
+    # 2. 128 px, NOT the project's 256.
+    #
+    # Landslide4Sense patches are 128x128. They are NOT upsampled: interpolating
+    # a label raster invents boundaries that were never drawn, and a model
+    # scored against invented boundaries is scored against fiction.
+    #
+    # So this run trains at 128. The architectures are resolution-agnostic
+    # (tests cover odd sizes), but the comparison is therefore at a different
+    # scale from the project's own patches, and the two are not interchangeable.
+    # ---------------------------------------------------------------------------
+    size_px: 128
+    stride_px: 128
+    scale_m: 10.0
+    # The dataset's own patches are already cropped around landslides, so most
+    # carry label. Keeping the project default would discard little, but a
+    # lower floor avoids throwing away background-only patches that the model
+    # needs in order to learn what is NOT a landslide.
+    min_labelled_fraction: 0.0
+
+  split:
+    # ---------------------------------------------------------------------------
+    # 3. EVENT split, because a geographic one is impossible here.
+    #
+    # The patches carry no coordinates. A geographic split would fall back to
+    # synthetic positions and degenerate into a per-patch split -- which is
+    # exactly the random patch split the brief forbids, since adjacent patches
+    # from one landslide would straddle train and test.
+    #
+    # Each patch is its own "event", which is the most honest available
+    # partitioning: it guarantees no patch appears twice. It does NOT guarantee
+    # that two patches cut from the SAME landslide land in one partition,
+    # because the dataset does not say which patches share a source. That is a
+    # genuine residual leak risk and is recorded in docs/labelling.md.
+    # ---------------------------------------------------------------------------
+    strategy: event
+    train_fraction: 0.70
+    val_fraction: 0.15
+    seed: 0
+
+  training:
+    # 3,799 patches at 128 px is a real dataset, so a real schedule.
+    batch_size: 16
+    epochs: 40
+    learning_rate: 0.0003
+    num_workers: 2
+    # Landslide pixels are a small minority of a patch set cropped around
+    # landslides, and a smaller minority still of the whole. An unweighted
+    # loss can fall while the model predicts background everywhere, which is
+    # the failure Section 7.5's per-class metrics exist to expose.
+    #
+    # Weighted toward the two classes this source actually distinguishes.
+    # Classes 1, 3 and 4 are absent, so their weight is irrelevant here and is
+    # left at 1.0 rather than 0.0: a zero would silently mask a future run
+    # that DOES have them.
+    class_weights: [1.0, 1.0, 5.0, 1.0, 1.0]
+    early_stopping_patience: 8
+    # Macro IoU over present classes only. Never accuracy: background
+    # dominates and a model predicting it everywhere would score well.
+    monitor_metric: macro_iou
+
+  sources:
+    landslide4sense:
+      enabled: true
+      # Set to the unpacked TrainData directory. On Colab the notebook
+      # downloads and unpacks it, then sets this.
+      root: null

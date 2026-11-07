@@ -1,0 +1,159 @@
+{
+  "note": "supersedes the unfused numbers in validation 20-23",
+  "sar_threshold_db": -8.65,
+  "water_per_date": {
+    "2018-11-02": {
+      "optical_ok_fraction": 0.9985,
+      "phase3_px": 8045,
+      "fused_px": 7876
+    },
+    "2018-11-09": {
+      "optical_ok_fraction": 0.5856,
+      "phase3_px": 8718,
+      "fused_px": 7671
+    },
+    "2018-11-19": {
+      "optical_ok_fraction": 0.5824,
+      "phase3_px": 10982,
+      "fused_px": 10351
+    },
+    "2018-11-22": {
+      "optical_ok_fraction": 0.917,
+      "phase3_px": 10226,
+      "fused_px": 9845
+    }
+  },
+  "phase5": {
+    "cited >15 deg": {
+      "changed_px": 2796,
+      "changed_km2": 0.2796,
+      "polygons": 61
+    },
+    "dam-tuned >1 deg": {
+      "changed_px": 3189,
+      "changed_km2": 0.3189,
+      "polygons": 66
+    }
+  },
+  "phase7": {
+    "candidates": 2,
+    "ranked_by_gained_upstream": [
+      {
+        "dam_code": "ND-001",
+        "confidence": 0.75,
+        "accumulation_max_cells": 333301.0,
+        "gained_upstream_m2": 239500.0,
+        "landslide_area_m2": 90300.0
+      },
+      {
+        "dam_code": "ND-002",
+        "confidence": 0.5,
+        "accumulation_max_cells": 1465.0,
+        "gained_upstream_m2": 1700.0,
+        "landslide_area_m2": 16400.0
+      }
+    ],
+    "lake_bearing": "ND-001",
+    "confidence": 0.75
+  },
+  "phase8_9": {
+    "series": [
+      {
+        "date": "2018-11-02",
+        "zone_observable": 0.9975,
+        "lake_area_m2": 0.0,
+        "status": "pre-event"
+      },
+      {
+        "date": "2018-11-09",
+        "zone_observable": 0.8221,
+        "lake_area_m2": 634900.0,
+        "status": "measurement (lower bound)"
+      },
+      {
+        "date": "2018-11-19",
+        "zone_observable": 0.8264,
+        "lake_area_m2": 697000.0,
+        "status": "measurement (lower bound)"
+      },
+      {
+        "date": "2018-11-22",
+        "zone_observable": 0.9903,
+        "lake_area_m2": 654200.0,
+        "status": "measurement (lower bound)"
+      }
+    ],
+    "trend": {
+      "trend": "Increasing",
+      "n_valid": 3,
+      "n_gaps": 0,
+      "method": "theil_sen slope, relative threshold (|0.00224|/day vs 0.001/day of mean area)",
+      "reason": null,
+      "first_date": "2018-11-09",
+      "last_date": "2018-11-22",
+      "span_days": 13,
+      "first_area_m2": 634900.0,
+      "last_area_m2": 654200.0,
+      "absolute_change_m2": 19300.0,
+      "percent_change": 3.0398487950858404,
+      "rate_m2_per_day": 1484.6153846153845,
+      "fractional_rate_per_day": 0.0022425085110750484,
+      "gaps": []
+    }
+  },
+  "phase11": {
+    "score": 0.7979,
+    "level": "CRITICAL INDICATORS - verification recommended",
+    "data_coverage": 0.8182,
+    "factors": [
+      {
+        "name": "lake_growth_rate",
+        "available": true,
+        "value": 1484.615,
+        "score": 0.7423,
+        "weight": 3.0,
+        "contribution": 2.2269
+      },
+      {
+        "name": "lake_volume",
+        "available": false,
+        "value": null,
+        "score": null,
+        "weight": 2.0,
+        "contribution": 0.0
+      },
+      {
+        "name": "new_landslide_activity",
+        "available": true,
+        "value": 90300.0,
+        "score": 1.0,
+        "weight": 2.0,
+        "contribution": 2.0
+      },
+      {
+        "name": "blockage_confidence",
+        "available": true,
+        "value": 0.75,
+        "score": 0.75,
+        "weight": 3.0,
+        "contribution": 2.25
+      },
+      {
+        "name": "slope",
+        "available": true,
+        "value": 36.139,
+        "score": 0.7046,
+        "weight": 1.0,
+        "contribution": 0.7046
+      },
+      {
+        "name": "rainfall",
+        "available": false,
+        "value": null,
+        "score": null,
+        "weight": 0.0,
+        "contribution": 0.0
+      }
+    ]
+  }
+}

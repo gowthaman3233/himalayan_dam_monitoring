@@ -1,0 +1,714 @@
+{
+  "event": "Baige landslide dam, second failure 2018-11-03",
+  "gate": "Phase 7 - candidate found at a confirmed validation event",
+  "optical_pair": [
+    "2018-11-02",
+    "2018-11-09"
+  ],
+  "change_map_source": "data/processed/baige_arrays.npz (Phase 5 dam-tuned run)",
+  "published_point": {
+    "lon": 98.70499,
+    "lat": 31.08234
+  },
+  "published_point_used_for": "measurement only; never passed to the detector",
+  "settings": {
+    "max_distance_to_stream_m": 50.0,
+    "evidence_search_m": 500.0,
+    "channel_zone_m": 30.0,
+    "min_evidence_types": 1,
+    "min_confidence": 0.3
+  },
+  "stream_px": 13202,
+  "landslide_px": 2652,
+  "water_pre_px": 8045,
+  "water_post_px": 8718,
+  "candidate_count": 14,
+  "candidates": [
+    {
+      "dam_code": "ND-005",
+      "confidence": 1.0,
+      "landslide_area_m2": 1000.0,
+      "distance_to_stream_m": 10.0,
+      "centroid_lon": 98.712915,
+      "centroid_lat": 31.083651,
+      "distance_to_published_point_m": 769.7,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 10.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 1.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "42 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 16100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "324 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 24400.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "453 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-007",
+      "confidence": 1.0,
+      "landslide_area_m2": 1000.0,
+      "distance_to_stream_m": 0.0,
+      "centroid_lon": 98.722094,
+      "centroid_lat": 31.074494,
+      "distance_to_published_point_m": 1848.8,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 0.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 1.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "110 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 38000.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "166 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 11700.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "325 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-003",
+      "confidence": 0.75,
+      "landslide_area_m2": 1300.0,
+      "distance_to_stream_m": 50.0,
+      "centroid_lon": 98.707944,
+      "centroid_lat": 31.098945,
+      "distance_to_published_point_m": 1861.7,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 50.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "0 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 1100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "407 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 3100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "2 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-006",
+      "confidence": 0.75,
+      "landslide_area_m2": 1700.0,
+      "distance_to_stream_m": 50.0,
+      "centroid_lon": 98.712291,
+      "centroid_lat": 31.083192,
+      "distance_to_published_point_m": 702.8,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 50.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "0 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 19100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "263 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 22300.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "408 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-009",
+      "confidence": 0.625,
+      "landslide_area_m2": 1200.0,
+      "distance_to_stream_m": 10.0,
+      "centroid_lon": 98.727415,
+      "centroid_lat": 31.071278,
+      "distance_to_published_point_m": 2465.5,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 10.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 1.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "63 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 57000.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "174 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 400.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "264 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-010",
+      "confidence": 0.625,
+      "landslide_area_m2": 9200.0,
+      "distance_to_stream_m": 0.0,
+      "centroid_lon": 98.734575,
+      "centroid_lat": 31.068959,
+      "distance_to_published_point_m": 3188.1,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 0.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 0.941,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "236 -> 14 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 70000.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "126 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "157 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-011",
+      "confidence": 0.625,
+      "landslide_area_m2": 1500.0,
+      "distance_to_stream_m": 50.0,
+      "centroid_lon": 98.735429,
+      "centroid_lat": 31.068074,
+      "distance_to_published_point_m": 3306.2,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 50.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 0.944,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "90 -> 5 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 39700.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "61 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "138 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-012",
+      "confidence": 0.625,
+      "landslide_area_m2": 1300.0,
+      "distance_to_stream_m": 20.0,
+      "centroid_lon": 98.736336,
+      "centroid_lat": 31.063927,
+      "distance_to_published_point_m": 3620.2,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 20.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 1.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "95 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 40800.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "58 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "131 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-013",
+      "confidence": 0.625,
+      "landslide_area_m2": 13200.0,
+      "distance_to_stream_m": 0.0,
+      "centroid_lon": 98.732729,
+      "centroid_lat": 31.060279,
+      "distance_to_published_point_m": 3602.8,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 0.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 0.824,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "353 -> 62 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 43600.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "78 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "243 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-014",
+      "confidence": 0.625,
+      "landslide_area_m2": 5100.0,
+      "distance_to_stream_m": 40.0,
+      "centroid_lon": 98.734117,
+      "centroid_lat": 31.060823,
+      "distance_to_published_point_m": 3661.6,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 40.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": true,
+          "weight": 2.0,
+          "value": 0.417,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "24 -> 14 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 56800.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "184 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "24 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-001",
+      "confidence": 0.5,
+      "landslide_area_m2": 1900.0,
+      "distance_to_stream_m": 30.0,
+      "centroid_lon": 98.71094,
+      "centroid_lat": 31.109188,
+      "distance_to_published_point_m": 3029.1,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 30.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "0 -> 99 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "53 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 40600.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "223 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-002",
+      "confidence": 0.5,
+      "landslide_area_m2": 1100.0,
+      "distance_to_stream_m": 30.0,
+      "centroid_lon": 98.707257,
+      "centroid_lat": 31.106849,
+      "distance_to_published_point_m": 2724.9,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 30.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "0 -> 114 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "123 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 25200.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "273 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-004",
+      "confidence": 0.5,
+      "landslide_area_m2": 3300.0,
+      "distance_to_stream_m": 20.0,
+      "centroid_lon": 98.713195,
+      "centroid_lat": 31.096595,
+      "distance_to_published_point_m": 1763.1,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 20.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": -0.293,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "123 -> 159 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "242 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": true,
+          "weight": 3.0,
+          "value": 20100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "264 upstream stream px"
+        }
+      ]
+    },
+    {
+      "dam_code": "ND-008",
+      "confidence": 0.375,
+      "landslide_area_m2": 1000.0,
+      "distance_to_stream_m": 0.0,
+      "centroid_lon": 98.73176,
+      "centroid_lat": 31.074199,
+      "distance_to_published_point_m": 2708.3,
+      "pre_date": "2018-11-02",
+      "post_date": "2018-11-09",
+      "factors": [
+        {
+          "name": "intersects_stream",
+          "present": true,
+          "weight": 1.0,
+          "value": 0.0,
+          "unit": "m",
+          "threshold": 50.0,
+          "reason": "precondition, not evidence of obstruction"
+        },
+        {
+          "name": "channel_narrowing",
+          "present": false,
+          "weight": 2.0,
+          "value": 0.0,
+          "unit": "fraction",
+          "threshold": 0.3,
+          "reason": "0 -> 0 water px in the channel zone"
+        },
+        {
+          "name": "downstream_water_loss",
+          "present": true,
+          "weight": 2.0,
+          "value": 44000.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "323 downstream stream px"
+        },
+        {
+          "name": "new_upstream_water",
+          "present": false,
+          "weight": 3.0,
+          "value": 100.0,
+          "unit": "m2",
+          "threshold": 1000.0,
+          "reason": "39 upstream stream px"
+        }
+      ]
+    }
+  ]
+}

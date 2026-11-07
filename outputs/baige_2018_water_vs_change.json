@@ -1,0 +1,10 @@
+{
+  "water_pre_km2": 0.8045,
+  "water_post_km2": 0.8718,
+  "new_water_km2": 0.3757,
+  "change_map_km2": 0.4429,
+  "change_that_is_new_water_km2": 0.1271,
+  "change_that_is_new_water_fraction": 0.287,
+  "landslide_like_km2": 0.3158,
+  "largest_polygon_new_water_fraction": 0.5125
+}

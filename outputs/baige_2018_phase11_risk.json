@@ -1,0 +1,156 @@
+{
+  "site": "ND-001 / BL-001, Baige 2018",
+  "inputs": {
+    "blockage_confidence": 0.5,
+    "new_landslide_area_m2": 1900.0,
+    "median_slope_deg": 51.6,
+    "lake_growth_rate_m2_per_day": -13130.76923076923,
+    "trend": "Decreasing",
+    "volume_m3": null
+  },
+  "growth_rate_scale_m2_per_day": [
+    0.0,
+    2000.0
+  ],
+  "assessments": {
+    "as observed: the DECLINE (Phase 9)": {
+      "rate_m2_per_day": -13130.8,
+      "score": 0.2862,
+      "level": "MONITOR",
+      "data_coverage": 0.8182,
+      "insufficient_data": false,
+      "factors": [
+        {
+          "name": "lake_growth_rate",
+          "available": true,
+          "value": -13130.769,
+          "score": 0.0,
+          "weight": 3.0,
+          "contribution": 0.0,
+          "value_type": "derived",
+          "reason": null
+        },
+        {
+          "name": "lake_volume",
+          "available": false,
+          "value": null,
+          "score": null,
+          "weight": 2.0,
+          "contribution": 0.0,
+          "value_type": "unavailable",
+          "reason": "Phase 10 has not been run on this site; no depth or volume exists"
+        },
+        {
+          "name": "new_landslide_activity",
+          "available": true,
+          "value": 1900.0,
+          "score": 0.038,
+          "weight": 2.0,
+          "contribution": 0.076,
+          "value_type": "derived",
+          "reason": null
+        },
+        {
+          "name": "blockage_confidence",
+          "available": true,
+          "value": 0.5,
+          "score": 0.5,
+          "weight": 3.0,
+          "contribution": 1.5,
+          "value_type": "classified",
+          "reason": null
+        },
+        {
+          "name": "slope",
+          "available": true,
+          "value": 51.603,
+          "score": 1.0,
+          "weight": 1.0,
+          "contribution": 1.0,
+          "value_type": "observed",
+          "reason": null
+        },
+        {
+          "name": "rainfall",
+          "available": false,
+          "value": null,
+          "score": null,
+          "weight": 0.0,
+          "contribution": 0.0,
+          "value_type": "unavailable",
+          "reason": "not supplied"
+        }
+      ]
+    },
+    "the GROWTH phase, 11-02 -> 11-09": {
+      "rate_m2_per_day": 86028.6,
+      "score": 0.6196,
+      "level": "HIGH RISK INDICATORS",
+      "data_coverage": 0.8182,
+      "insufficient_data": false,
+      "factors": [
+        {
+          "name": "lake_growth_rate",
+          "available": true,
+          "value": 86028.571,
+          "score": 1.0,
+          "weight": 3.0,
+          "contribution": 3.0,
+          "value_type": "derived",
+          "reason": null
+        },
+        {
+          "name": "lake_volume",
+          "available": false,
+          "value": null,
+          "score": null,
+          "weight": 2.0,
+          "contribution": 0.0,
+          "value_type": "unavailable",
+          "reason": "Phase 10 has not been run on this site; no depth or volume exists"
+        },
+        {
+          "name": "new_landslide_activity",
+          "available": true,
+          "value": 1900.0,
+          "score": 0.038,
+          "weight": 2.0,
+          "contribution": 0.076,
+          "value_type": "derived",
+          "reason": null
+        },
+        {
+          "name": "blockage_confidence",
+          "available": true,
+          "value": 0.5,
+          "score": 0.5,
+          "weight": 3.0,
+          "contribution": 1.5,
+          "value_type": "classified",
+          "reason": null
+        },
+        {
+          "name": "slope",
+          "available": true,
+          "value": 51.603,
+          "score": 1.0,
+          "weight": 1.0,
+          "contribution": 1.0,
+          "value_type": "observed",
+          "reason": null
+        },
+        {
+          "name": "rainfall",
+          "available": false,
+          "value": null,
+          "score": null,
+          "weight": 0.0,
+          "contribution": 0.0,
+          "value_type": "unavailable",
+          "reason": "not supplied"
+        }
+      ]
+    }
+  },
+  "disclaimer": "Research prototype output. Not an official warning. Verify with authoritative sources."
+}
