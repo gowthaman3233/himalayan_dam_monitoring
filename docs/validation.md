@@ -2591,6 +2591,159 @@ Eleven tests. `scripts/baige/05_persist_and_report.py` reproduces it.
 
 ---
 
+## 30. Phase 6 gate — the first trained models
+
+**Gate check (brief, Phase 6):** *per-class metrics plus the water-vs-shadow
+confusion reported for both models.*
+
+**Status: partially met, and the missing part cannot be met from this data.**
+The architecture comparison the brief requires now exists on real labelled
+data. The water-vs-shadow confusion — the project's primary scientific result
+— is reported as the gate asks, but it is **empty by construction**, because
+Landslide4Sense labels neither water nor terrain shadow. Only hand-labelled
+Himalayan patches can fill it.
+
+### The result
+
+Trained on Colab from `notebooks/colab_train.ipynb`, Route A:
+Landslide4Sense 2022 (CC BY 4.0), 3,799 labelled patches at 128x128, split by
+event into 2,659 train / 570 validation / 570 test, 11 channels, class weights
+`[1, 1, 5, 1, 1]`, monitored on macro IoU.
+
+| class | plain U-Net | Attention U-Net |
+|---|---|---|
+| background / land | 0.9855 | **0.9864** |
+| water | *(no pixels)* | *(no pixels)* |
+| landslide / bare debris | 0.5499 | **0.5635** |
+| terrain shadow | *(no pixels)* | *(no pixels)* |
+| snow / ice | *(no pixels)* | *(no pixels)* |
+| **macro (present classes)** | 0.7677 | **0.7749** |
+
+| | plain U-Net | Attention U-Net |
+|---|---|---|
+| parameters | 7,852,037 | 7,984,041 (**+132,004**, +1.68%) |
+| best epoch | 10 | **33** |
+| early-stopped | yes | **no** (ran the full 40) |
+| best validation macro IoU | 0.7792 | 0.7866 |
+
+Absent classes report `None`, not `0.0`. The difference is the difference
+between "the model failed at this" and "there was nothing to learn from", and
+collapsing it would make the macro average meaningless.
+
+### What this does establish
+
+**The Attention U-Net outperforms the plain U-Net**, by **+0.0136 landslide
+IoU** (+2.5% relative) for 1.68% more parameters. Because the baseline is
+`plain_unet` — the same class with the gates removed, identical in depth,
+widths, normalisation and upsampling — the difference is attributable to the
+attention gates and not to any other implementation detail.
+
+The more interesting difference is the training behaviour. **The plain U-Net
+stopped improving at epoch 10 and early-stopped; the Attention U-Net was still
+improving at epoch 33 and never early-stopped at all.** A gain measured at a
+point where one model had converged and the other had not is a weaker claim
+than the single number suggests — the gap might widen with a longer schedule,
+or close.
+
+### What this does not establish
+
+1. **One seed.** `models.split.seed` is 0 and the run was not repeated. A
+   +0.0136 difference is **well within the range a different split or
+   initialisation could produce**, so this does not show the gates help;
+   it shows they did help once. Several seeds are needed before the
+   comparison carries weight, and the project's own standards would not accept
+   a single run as a finding anywhere else.
+2. **The water-vs-shadow confusion is empty.** `a_as_b` and `b_as_a` are 0
+   and both rates are `None` because neither class exists in the data. **The
+   project's central claim — that terrain-aware fusion separates water from
+   shadow — remains entirely untested by any model.**
+3. **Not Himalayan, and not this project's stack.** Landslide4Sense is not
+   Himalayan terrain, carries no Sentinel-1, and has no illumination or
+   terrain-shadow layer, so the models trained here use **11 of the 15
+   configured channels** and have never seen SAR or a shadow mask. A
+   checkpoint from this run cannot be applied to a full stack, and
+   `models/predict.py` refuses the mismatch.
+4. **Landslide IoU near 0.55 is moderate.** It is a working model, not a good
+   one. The published Landslide4Sense competition results are the proper
+   comparison and were not consulted here.
+5. **No Himalayan accuracy figure follows from this.** Nothing in this run
+   speaks to the Baige results in §§20-26.
+
+### Three defects this run exposed, all in this project's code
+
+The gate took four attempts. Each failure produced a *complete-looking* result
+or a misleading error, which is the common thread worth recording.
+
+**1. The class-weight tensor was built on the CPU.** It needed two conditions
+at once — `class_weights` set and a non-CPU device — and the default config
+sets no weights while the tests run on CPU, so neither alone trips it. It
+surfaced only on the first real GPU run.
+
+**2. A NaN input destroyed the model, silently.** This is the one worth
+remembering. A normalised difference index is NaN where its denominator
+vanishes, which is **correct** for the detection pipeline — NaN means
+unmeasurable and the fusion treats it as absent evidence — but a network has
+no such notion.
+
+Measured: **one NaN among 22,528 input values turned all 7,852,037 weights
+NaN on the first optimiser step.** After that `argmax` over all-NaN logits
+returns index 0, so the model predicts background everywhere. The run then
+completed its full schedule and reported:
+
+* bit-identical metrics from both architectures, to sixteen decimal places,
+  despite 132,004 parameters between them;
+* landslide IoU exactly 0.0;
+* background IoU 0.9782894736842105, which is **precisely** the background
+  fraction of the test split;
+* best epoch 1, early-stopped.
+
+None of that looks like a crash. It looks like a finding. The arithmetic is
+what gave it away: two different architectures cannot agree to sixteen
+decimal places unless both outputs are degenerate.
+
+Fixed in `PatchDataset`: a non-finite input becomes 0.0 **and the pixel's
+label becomes `ignore_index`**, so it contributes nothing to the loss —
+replacing the input alone would train the model to predict a real class for
+ground with no measurement. Training also now **refuses to continue on a
+non-finite loss**, because running through one produces a confident null
+result, which is worse than an error.
+
+**3. No input normalisation existed.** Found while diagnosing (2) and fixed
+on the way: the stack spans orders of magnitude, and on synthetic data at
+realistic scales standardisation alone moved landslide IoU from 0.127 to
+0.769. Statistics come from the **training split only** — computing them over
+all patches would leak the test distribution — and are stored in the
+checkpoint so inference applies exactly what training saw.
+
+A fourth, smaller one: normalisation must be applied **after** nodata
+detection, since standardising maps an all-zero pixel away from zero and the
+scene edge would then be classified rather than marked unseen. That is the
+same failure as §24, Finding 4a, in a different module.
+
+**Why the tests missed all of this.** The fixtures drew every band from
+`normal(0.2, 0.08)` — already well scaled, never non-finite, and run on CPU
+with no class weights. They exercised the plumbing and none of the conditions
+that matter. The replacements use realistic per-channel scales, inject NaN and
+infinity, and assert that weights stay finite; one of them demonstrates the
+original failure so the fix is not guarding against a guess.
+
+### Open items at the Phase 6 gate
+
+1. **Repeat across seeds.** Until then the attention result is one
+   observation, not a finding.
+2. **The water-vs-shadow confusion still needs hand labels.** No public
+   dataset labels terrain shadow, so this is unobtainable any other way.
+3. **Compare against the published Landslide4Sense results** to know whether
+   0.55 is competent or poor.
+4. **The smp baseline was not run.** `MODEL_BASELINE` is wired and
+   untried, so the brief's external baseline is still absent.
+5. **The Attention U-Net had not converged** at the end of the schedule.
+
+Artifacts: `comparison.json` and
+`landslide4sense_conversion.json` in the run's Drive output directory.
+
+---
+
 ## 19. End-to-end validation write-up
 
 This is the write-up the brief asks for at Phase 13: what has been
@@ -2606,7 +2759,7 @@ validated, what has not, and what a reader should not conclude.
 | 3 | Rule-based water detection | ✅ passed |
 | 4 | Shadow-rejection fusion | ✅ passed; **re-verified** after the `cos_incidence` bug — §24, Finding 5a |
 | 5 | Bi-temporal landslide change | ✅ passed on Baige 2018 — §20; magnitudes superseded by §25 |
-| 6 | U-Net / Attention U-Net | ⛔ **gate not met** — code complete (§27), no trained model: needs labels + GPU |
+| 6 | U-Net / Attention U-Net | ▲ **partially met** — both models trained, Attention U-Net ahead (§30); water-vs-shadow still needs hand labels |
 | 7 | River blockage candidates | ✅ passed on Baige 2018 — §21; superseded by §25, then §26 (32 candidates → 2) |
 | 8 | Barrier lake detection and tracking | ✅ passed on Baige 2018 — §22; magnitudes superseded by §25 |
 | 9 | Temporal change | ✅ passed; §23, §25, §26 — **the trend's sign is not robust** |
@@ -2682,10 +2835,12 @@ records a refusal mean different things to a reader.
    merging moved this site from MONITOR (0.3909) to CRITICAL (0.7979), and
    merging did not exist until it was written. **No level published before
    §26 is reliable.**
-5. **No trained segmentation model exists.** Phase 6's code is complete
-   (§27) but the brief's required plain-U-Net vs Attention-U-Net comparison
-   has never been run, so the project's central architectural claim is
-   untested.
+5. **A trained comparison exists but on one seed, and the central claim is
+   still untested.** Both models are trained and the Attention U-Net leads by
+   +0.0136 landslide IoU (§30) — a gap well within what a different seed
+   could produce. The **water-vs-shadow confusion is empty**, because no
+   public dataset labels terrain shadow, so the project's primary scientific
+   claim has never been tested by any model.
 6. **One real event, in Tibet.** Nothing has been processed in Nepal, the
    brief's primary study area. The Lhende/Rasuwa event has no confirmed
    coordinate.
