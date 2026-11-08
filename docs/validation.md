@@ -2744,6 +2744,316 @@ Artifacts: `comparison.json` and
 
 ---
 
+## 31. A finding that changes how Baige must be scored
+
+Before any hand digitising, the two Sentinel-2 scenes were rendered and
+**looked at** rather than only computed on. That is worth doing once per
+event: it showed something the numbers had not.
+
+### The deposit is already present on the "pre-event" date
+
+Baige dammed the Jinsha **twice** -- 2018-10-10 and 2018-11-03 -- and the
+only usable optical pair straddles the *second* failure (validation.md 20:
+no scene before the first passes the cloud filter). So the 2018-11-02 scene
+is **post-first-failure**, and the pale debris mass is plainly visible in it.
+
+Measured with one rule applied identically to both dates (B11 > 0.22
+reflectance and NDVI < 0.15 -- a convention for this comparison, not a
+detector):
+
+| | bare bright debris |
+|---|---|
+| 2018-11-02, after the first dam | 0.8698 km² |
+| 2018-11-09, after the second | 0.9704 km² |
+| **already debris on both dates** | **0.4902 km² (50.5% of the 11-09 mass)** |
+| new on 11-09 only | 0.4802 km² |
+
+**Half the visible deposit predates the change-detection pair.**
+
+### Why this would have corrupted the first accuracy figure
+
+A digitiser tracing "the landslide" on 11-09 would naturally outline the whole
+pale mass, because that is what a landslide looks like. Scored against a
+change map that can only contain the increment, that outline would report
+**recall near 6%** -- and the detector would be blamed for failing to find
+material it was never shown.
+
+The instruction in `scripts/baige/12_score_against_truth.py` has been
+corrected: **digitise only what is new on 11-09**, by comparing the two dates.
+
+### A second observation, corroborating 21
+
+The downstream channel is unmistakably **blue (water) on 11-02 and pink
+(dry or sediment-choked) on 11-09**, directly visible in the rendering. The
+drainage that 21 inferred from water-mask arithmetic is plain in the imagery.
+Two independent routes to the same conclusion.
+
+### And a caution about the change map itself
+
+Of the 3,189 change pixels, only **610 (19.1%)** fall on debris that is new
+by the rule above, and 87 (2.7%) on debris that was already there. The
+remaining 78% is neither -- consistent with 20's finding that 87% of the
+flagged area is not the landslide, reached here by a different method.
+
+The rule is crude and uncited, so this is a flag rather than a measurement.
+But it means the forthcoming accuracy figure for Phase 5 is likely to be
+**low, and correctly so**.
+
+### What was not done
+
+**No polygons were generated.** Producing them from the project's own
+detectors and then scoring the detectors against them would be circular.
+Interpreting the imagery by eye is possible -- the features are clear -- but
+that interpretation has been anchored all session by these same detector
+outputs, so it is not independent in the way ground truth must be. The
+digitising remains the repository owner's to do.
+
+Artifacts: `outputs/baige_2018_deposit_epochs.json`.
+
+---
+
+## 32. The first accuracy figure — the Baige barrier lake
+
+Until now **no number in this project was an accuracy.** Every figure in
+§§20-31 was a plausibility check: a distance to a published point, an
+elevation, an area against a published figure, or two independent signals
+agreeing. This section scores one quantity against a hand-drawn reference for
+the first time.
+
+### The reference, and how independent it is
+
+The reference is a single polygon outlining the impounded lake on 2018-11-09,
+drawn in QGIS by the repository owner over the false-colour Sentinel-2 scene
+(R=B11, G=B8, B=B4), stored in `data/validation/baige_lake_truth.gpkg`
+(EPSG:32647).
+
+It is a **human interpretation by one annotator, not an absolute**, and it is
+not fully independent of this project's work:
+
+* the annotator was told roughly **where to look** (a map coordinate) and
+  **what water looks like in that composite** (dark navy, not cyan);
+* a first attempt traced the bright cyan patch at the south edge, which is
+  snow or ice, and was discarded unsaved before the layer was written;
+* the outline was drawn **without sight of the detection's outline**, which is
+  the independence that matters most here.
+
+### Result, as drawn
+
+| | value |
+|---|---|
+| reference lake | 578,800 m² (5,788 px) |
+| detected lake | 634,900 m² (6,349 px), 9.7% larger |
+| **IoU** | **0.661** |
+| precision | 0.760 |
+| recall | 0.834 |
+| F1 | 0.796 |
+| true positive / false positive / false negative | 4,828 / 1,521 / 960 px |
+
+Scoring excludes pixels the 2018-11-09 scene could not see (about 40% of it is
+nodata), dropping them from **both** masks rather than counting reference drawn
+over blind ground as a miss. The reference had none there.
+
+**This is the official first-pass figure.**
+
+### Where the errors are
+
+An IoU of 0.66 does not say how the two disagree, and the two possible answers
+point in opposite directions, so `scripts/baige/14_diagnose_lake_errors.py`
+separates them. It uses the reference to **diagnose** the detection and changes
+nothing: tuning thresholds against the same reference and then reporting the
+improved score on the same event would be fitting the answer.
+
+**Missed pixels are shoreline noise.** 86% of the 960 false negatives lie
+within 3 px of the detected edge, and 47% within 1 px.
+
+**Over-flagged pixels are mostly one patch.** Only 30% of the 1,521 false
+positives are within 3 px of the reference. **A single contiguous patch of
+1,042 px accounts for 69% of them**, at rows 0-26 against a reference that
+begins at row 25 — the northern end of the lake, running to the scene's top
+edge.
+
+| shoreline tolerance | precision | recall | IoU |
+|---|---|---|---|
+| 0 px (as scored) | 0.760 | 0.834 | 0.661 |
+| 1 px | 0.794 | 0.912 | 0.710 |
+| 2 px | 0.817 | 0.952 | 0.746 |
+| 3 px | 0.832 | 0.977 | 0.770 |
+
+Sentinel-2 pixels are 10 m and a hand-drawn outline is good to roughly one or
+two of them, so forgiving a few pixels of shoreline is a statement about
+measurement resolution and not a way of improving the score. It is reported
+because the as-scored figure mixes two different things.
+
+### The 1,042 px patch, and what is and is not known
+
+The patch has the **same spectral signature as the true positives** (B11
+median 69 against 86, both dark in the near-infrared), sits at a similar
+elevation (2,893 m against 2,877 m), touches the reference lake's northern end,
+and runs to the scene edge as the lake does. That points to **the reference
+stopping about 250 m short of the top edge**, not to a detection error.
+
+That is a reading of the evidence and not a settled fact, and the person who
+should settle it is the annotator, by looking at the image. **Should the
+reference be extended, the score would be:**
+
+| | precision | recall | IoU |
+|---|---|---|---|
+| as drawn | 0.760 | 0.834 | 0.661 |
+| *if* the patch is included in the reference | 0.925 | 0.859 | 0.803 |
+
+**The second row is conditional and is not the result.** Revising a reference
+after seeing where the detection disagrees is a recognised source of bias, and
+it is the circularity this whole exercise exists to avoid. If the reference is
+revised, both figures are to be reported, the revision labelled post-hoc.
+
+### A pre-scoring expectation that was wrong
+
+§31 and the scoring script both anticipated that the lake would show **low
+recall from truncation** by the 2000 m search window and the scene edge. It
+showed the opposite: **recall is the higher of the two (0.83)** and precision
+the lower. The truncation worry does not apply to this comparison, because the
+reference is cut by the same scene edge as the detection.
+
+The scoring script also printed that the thresholds were "too loose". On
+these results that conclusion is unsupported, since most of the false
+positives are one patch with a probable non-threshold explanation, and the
+message has been replaced by a pointer to the diagnostic.
+
+### A diagnostic that was wrong, and why
+
+The first version of the diagnostic treated water on slopes over 15° as
+suspect, reasoning that a lake surface is flat. For this lake that is
+**backwards**: the DEM was acquired 2011-2014, four years before the lake
+formed, so the slope under it is the old valley's, and the *true* positives
+have the steeper median (24.4° against 19.8°). The logic was removed. The same
+mistake would be easy to make again anywhere a post-DEM feature meets a
+DEM-derived layer.
+
+### What this establishes
+
+The water detection that feeds the barrier-lake stage agrees with a human
+outline of the lake to an IoU of 0.66, rising to about 0.77 once shoreline
+disagreement of up to 3 px is forgiven, with the largest single discrepancy
+having a plausible reference-side explanation.
+
+### What it does not establish
+
+* **One event, one date, one annotator.** Nothing here speaks to Nepal, to
+  other lakes, or to inter-annotator agreement, which was not measured.
+* **It scores the lake outline only.** It does not validate the blockage
+  candidate, the trend, the depth, the volume or the **CRITICAL** warning.
+  The warning level rests on factors this comparison does not touch.
+* **The landslide layer has not been drawn**, so Phase 5 remains without an
+  accuracy figure, and §31 expects it to be low.
+* **The reference is not fully independent** (above).
+* **Lake area remains a lower bound** (§22, §29). The reference is cut by the
+  same scene edge as the detection, so this comparison cannot test whether the
+  full lake is larger.
+
+Artifacts: `outputs/baige_2018_accuracy.json`,
+`data/processed/baige_lake_scored.npz` (the masks, kept for the diagnostic).
+
+---
+
+## 33. What the Baige CRITICAL level depends on
+
+The Baige indicator is **CRITICAL at 0.798 against a threshold of 0.75**, a
+margin of **0.048**. At that margin the useful question is not whether it is
+CRITICAL but **which inputs would have to be wrong, and by how much, for it
+not to be**. `scripts/baige/15_risk_sensitivity.py` varies one input at a
+time, holding the rest at their measured values.
+
+This is a **sensitivity analysis, not a validation.** It shows how robust the
+output is to an error in each input. It says nothing about whether any input
+is correct.
+
+### The four measured inputs
+
+| input | measured | stays CRITICAL from | margin | |
+|---|---|---|---|---|
+| **blockage confidence** | 0.750 | 0.610 | 0.140 (19%) | fragile |
+| **lake growth rate** | +1,484.6 m²/day | 1,200 m²/day | 284.6 (19%) | **fragile** |
+| median deposit slope | 36.1° | 23.5° | 12.6° (35%) | moderate |
+| new landslide area | 90,300 m² | 39,500 m² | 50,800 m² (56%) | robust |
+
+**Two inputs carry the level, and they are the two the project trusts least.**
+
+* **Lake growth rate.** The level needs at least +1,200 m²/day. Flat, or
+  falling, it drops to **HIGH RISK at 0.551**, and the two cases score the
+  same because a negative rate clamps to the bottom of its scale. The
+  measured +1,485 m²/day is the median of three pairwise slopes from a series
+  that rose and then fell (634,900 → 697,000 → 654,200 m²): the slopes are
+  +6,210, +1,485 and −14,267 m²/day, and the median simply picks the
+  end-to-end slope, a net change of +3.0%. §26 already recorded that the
+  trend's sign is not robust. This quantifies the consequence: **the CRITICAL
+  level stands or falls on it, with a 19% margin.**
+* **Blockage confidence.** The level needs at least 0.61. The same candidate
+  scored **0.500** before merging, which gives **HIGH RISK at 0.715**. And
+  §21 showed this score mis-ranks a drained reach above a real dam, so the
+  input itself is the one with a documented flaw.
+
+**The two inputs that look important turn out not to be.**
+
+* **New landslide area** only matters below about **39,500 m²**, against
+  90,300 m² for the merged candidate and roughly 480,000 m² of new bare
+  material by §31's crude rule. No estimate in the project is near the
+  threshold. This is why digitising the landslide layer is **low priority for
+  the warning**: whatever it showed, the level would not change unless the true
+  deposit were less than half the smallest estimate.
+* **Slope** needs to stay above 23.5° against a measured 36.1°.
+
+### The withheld volume is a real unknown
+
+Depth and volume are withheld for this site (§24), and an unavailable factor
+is **left out rather than scored as zero risk** (methods §11.2). So the 0.798 is a
+score over the 9 units of weight that could be measured, not over 11.
+
+A volume, were one available, would add weight 2 and pull the score toward its
+own value. **What-if, not an estimate:**
+
+| if the volume were | score | level |
+|---|---|---|
+| 0 m³ | 0.653 | HIGH RISK |
+| 3,000,000 m³ | 0.707 | HIGH RISK |
+| 5,000,000 m³ | 0.744 | HIGH RISK |
+| 7,500,000 m³ | 0.789 | CRITICAL |
+| 10,000,000 m³ | 0.835 | CRITICAL |
+
+The level would stay CRITICAL only for a volume of at least **about
+5,400,000 m³**. Published Baige figures are 105-775 × 10⁶ m³ (§2.2), far
+above that and above the scale's 10⁷ m³ ceiling, so a real measurement
+would very likely keep the level where it is. But that is context from the
+literature and not something this system can show, since it cannot currently
+measure the volume. **The honest statement is that the level is conditional on
+a quantity it has declined to estimate.**
+
+### What this changes about priorities
+
+| | before | after |
+|---|---|---|
+| landslide reference layer | next step toward accuracy | **optional**: the level does not depend on it |
+| more lake observations | a data-quality nicety | **the highest-value validation**: the level rests on a 3-point growth rate with a 19% margin |
+| blockage-confidence ranking | a documented flaw (§21) | a flaw **on the critical path** of the warning |
+| a water-surface model for volume | a depth problem (§24) | also decides whether the level is CRITICAL or HIGH |
+
+### What this does not say
+
+* **It does not say the warning is wrong.** The real Baige dam was impounding
+  the Jinsha and downstream evacuations took place; a high indicator is
+  defensible. What it says is that **this system reaches CRITICAL narrowly, on
+  two inputs it measures weakly**, and that a reader should treat the
+  distinction between CRITICAL and HIGH RISK here as unresolved.
+* **One-at-a-time sweeps miss interactions.** A smaller growth rate *and* a
+  lower confidence together would flip the level more easily than either
+  alone, so the margins above are upper bounds on the robustness.
+* **The scales and weights are conventions** (methods §11.4), and every margin here
+  is measured against them. A different convention moves every threshold.
+
+Artifacts: `outputs/baige_2018_risk_sensitivity.json`,
+`scripts/baige/15_risk_sensitivity.py`.
+
+---
+
 ## 19. End-to-end validation write-up
 
 This is the write-up the brief asks for at Phase 13: what has been
@@ -2816,11 +3126,13 @@ records a refusal mean different things to a reader.
 
 ### C. What has *not* been validated
 
-1. **No accuracy figure exists anywhere in this project.** There is no
-   labelled reference mask for any quantity at either site, so **IoU,
-   precision and recall are unmeasured for every phase**. Everything in B is
-   plausibility: a distance, an elevation, an area compared with a published
-   figure, or an agreement between two independent signals.
+1. **Exactly one accuracy figure exists in this project** (§32): the Baige
+   lake outline, IoU 0.661 as drawn, against one annotator's reference.
+   **IoU, precision and recall remain unmeasured for every other quantity** —
+   the landslide change map, the blockage candidate, the trend, the depth and
+   the risk level. Everything else in B is plausibility: a distance, an
+   elevation, an area compared with a published figure, or an agreement
+   between two independent signals.
 2. **Depth and volume are withheld for the real lake** (§24). A single
    shoreline water-surface elevation does not describe a long impoundment in
    a steep valley — the spread is ±24.61 m on a surface that must be level —
@@ -2835,6 +3147,10 @@ records a refusal mean different things to a reader.
    merging moved this site from MONITOR (0.3909) to CRITICAL (0.7979), and
    merging did not exist until it was written. **No level published before
    §26 is reliable.**
+   §33 quantifies how narrow it is: the level is CRITICAL by 0.048 and
+   needs both a growth rate of at least 1,200 m²/day (measured 1,485, from
+   three observations) and a blockage confidence of at least 0.61 (the same
+   candidate scored 0.50 before merging).
 5. **A trained comparison exists but on one seed, and the central claim is
    still untested.** Both models are trained and the Attention U-Net leads by
    +0.0136 landslide IoU (§30) — a gap well within what a different seed
@@ -2911,10 +3227,12 @@ wrong answer:
 
 ### G. What would most improve confidence, in order
 
-1. **A labelled reference mask, for anything.** Hand-digitising the Baige
-   deposit and lake from the 2018-11-09 scene would give this project its
-   first accuracy figure. There is currently none, anywhere, and no amount of
-   further engineering substitutes for it.
+1. **More reference masks.** The lake now has one (§32). The landslide
+   deposit does not, but §33 shows the warning level does not depend on it, so
+   it is **optional**: digitising only the material new on 11-09 (§31) would
+   give Phase 5 an accuracy figure and would not change the level. A second annotator on the lake would show how
+   much of the 0.66 is disagreement between people rather than between a
+   person and the detector. No amount of further engineering substitutes.
 2. **Hand-labelled patches across at least 3 areas 10 km apart**, which
    closes the Phase 6 gate and is the only source of the terrain-shadow class
    — no public dataset labels it (§27, `docs/labelling.md`).
@@ -2925,7 +3243,10 @@ wrong answer:
    blocker for any depth or volume at a real site (§24).
 5. **More observations per lake.** Three is the configured minimum and the
    trend's sign is not robust at it; the module is right to refuse to say
-   more, which makes this a data problem rather than a code one.
+   more, which makes this a data problem rather than a code one. §33 shows
+   why this outranks any reference mask for the warning: the CRITICAL level
+   needs a growth rate of at least 1,200 m²/day, and the measured +1,485
+   rests on three points, a 19% margin.
 6. **An AOI that follows the channel upstream.** A blockage-centred box is
    the wrong shape for a lake that backs up a valley, and it truncates every
    area reported.
@@ -2943,8 +3264,11 @@ correct river without being told where to look. Every number it produces is
 traceable to a cited method or a recorded convention, every refusal to
 estimate is recorded as a refusal rather than an omission, and twenty
 distinct ways of being confidently wrong were found and fixed by measurement
-rather than inspection. **It has also never been checked against ground truth,
-its warning level moved two levels on a single methodological choice, its
-trend's sign is not robust, and the segmentation model the project is named
-for has never been trained.** It is a working research prototype with
+rather than inspection. **It has been checked against a hand-drawn
+reference in exactly one place, the lake outline (IoU 0.66, §32); its
+warning level moved two levels on a single methodological choice; its trend's
+sign is not robust; and the segmentation model the project is named for has
+only been trained on a dataset that cannot test its central claim, with the
+Attention U-Net's advantage resting on one seed (§30).** It is a working
+research prototype with
 well-documented limits, not a validated instrument.

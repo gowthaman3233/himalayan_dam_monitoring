@@ -1,0 +1,33 @@
+{
+  "baseline_score": 0.798,
+  "baseline_level": "CRITICAL INDICATORS - verification recommended",
+  "critical_threshold": 0.75,
+  "margin": 0.048,
+  "one_at_a_time": [
+    {
+      "input": "blockage_confidence",
+      "measured": 0.75,
+      "critical_from": 0.61,
+      "critical_to": null
+    },
+    {
+      "input": "lake_growth_rate_m2_per_day",
+      "measured": 1484.615,
+      "critical_from": 1200.0,
+      "critical_to": null
+    },
+    {
+      "input": "slope_deg",
+      "measured": 36.139,
+      "critical_from": 23.5,
+      "critical_to": null
+    },
+    {
+      "input": "new_landslide_area_m2",
+      "measured": 90300.0,
+      "critical_from": 39500.0,
+      "critical_to": null
+    }
+  ],
+  "note": "sensitivity, not validation; the volume rows are what-ifs, depth and volume being withheld for this site"
+}

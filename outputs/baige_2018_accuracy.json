@@ -1,0 +1,17 @@
+{
+  "scene": "S2_47RMQ_20181109T040948",
+  "crs": "EPSG:32647",
+  "pixel_area_m2": 100.0,
+  "barrier_lake": {
+    "true_positive_px": 4828,
+    "false_positive_px": 1521,
+    "false_negative_px": 960,
+    "iou": 0.6605554795457655,
+    "precision": 0.7604347141282092,
+    "recall": 0.834139599170698,
+    "f1": 0.795583752162808,
+    "truth_area_m2": 578800.0,
+    "predicted_area_m2": 634900.0,
+    "upstream_search_m": 2000.0
+  }
+}

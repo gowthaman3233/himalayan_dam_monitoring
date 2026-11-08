@@ -1,0 +1,15 @@
+{
+  "question": "how much of the visible deposit predates the Phase 5 change-detection pair",
+  "rule": "B11 > 0.22 reflectance and NDVI < 0.15, applied to both dates",
+  "pre_date": "2018-11-02 (after the first dam, 2018-10-10)",
+  "post_date": "2018-11-09 (after the second dam, 2018-11-03)",
+  "debris_pre_m2": 869800.0,
+  "debris_post_m2": 970400.0,
+  "debris_both_dates_m2": 490200.0,
+  "debris_new_only_m2": 480200.0,
+  "fraction_of_post_mass_already_present": 0.5052,
+  "phase5_change_m2": 318900.0,
+  "phase5_on_new_debris_px": 610,
+  "phase5_on_old_debris_px": 87,
+  "implication": "A whole-deposit outline must NOT be scored against the 11-02 -> 11-09 change map. Digitise only material new on 11-09."
+}

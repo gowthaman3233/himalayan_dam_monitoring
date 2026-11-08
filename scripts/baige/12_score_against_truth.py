@@ -10,10 +10,19 @@ substitutes for a reference mask.
 
 This script turns two hand-drawn layers into IoU, precision and recall.
 
-WHAT TO DRAW (see the README section below, or docs/validation.md)
+WHAT TO DRAW (see docs/validation.md 31 before starting)
 
-    data/validation/baige_landslide_truth.gpkg   the deposit outline
+    data/validation/baige_landslide_truth.gpkg   material NEW on 2018-11-09
     data/validation/baige_lake_truth.gpkg        the impounded water, 2018-11-09
+
+**The landslide layer must be the NEW material only, not the whole visible
+deposit.** Baige dammed the Jinsha twice, on 2018-10-10 and 2018-11-03, so
+the 2018-11-02 scene already contains the first failure's debris -- about
+51% of the pale mass visible on 11-09 was already there. Phase 5's change
+map can only contain what changed between those two dates, so a
+whole-deposit outline would score roughly 6% recall and blame the detector
+for something it was never shown. Compare the two dates in QGIS and outline
+only what appears.
 
 Both as POLYGON layers in EPSG:32647, digitised over
 data/raw/baige_2018/S2_47RMQ_20181109T040948_refl.tif.
@@ -51,16 +60,30 @@ LAKE_TRUTH = TRUTH_DIR / "baige_lake_truth.gpkg"
 DEM = ROOT / "data/raw/baige_2018/DEM_GLO30_v02_EPSG32647.tif"
 
 
-def confusion(truth: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
+def confusion(
+    truth: np.ndarray,
+    predicted: np.ndarray,
+    observed: np.ndarray | None = None,
+) -> dict[str, float]:
     """IoU, precision, recall and F1 for one binary class.
 
     Precision and recall are reported separately rather than only as IoU,
     because they fail differently and the distinction is actionable: low
     recall means the detector missed the feature, low precision means it
     flagged ground that is not the feature, and the fixes are not the same.
+
+    ``observed`` restricts scoring to pixels the 2018-11-09 scene actually
+    saw. Roughly 40% of this scene is nodata, and neither a detector nor a
+    reference can be judged where the sensor was blind: truth drawn over it
+    would be counted as missed, and no detector could ever recover it. Those
+    pixels are dropped from BOTH masks rather than scored as failures.
     """
     truth = np.asarray(truth, dtype=bool)
     predicted = np.asarray(predicted, dtype=bool)
+    if observed is not None:
+        observed = np.asarray(observed, dtype=bool)
+        truth = truth & observed
+        predicted = predicted & observed
     tp = int(np.count_nonzero(truth & predicted))
     fp = int(np.count_nonzero(~truth & predicted))
     fn = int(np.count_nonzero(truth & ~predicted))
@@ -131,6 +154,27 @@ def main() -> int:
     print("truth layers:")
     truth_landslide = rasterise(LANDSLIDE_TRUTH, transform, shape, crs)
     truth_lake = rasterise(LAKE_TRUTH, transform, shape, crs)
+
+    # Pixels the 11-09 scene could see. About 40% of it is nodata at the scene
+    # edge; truth drawn there cannot be judged against any detection.
+    with rasterio.open(
+        ROOT / "data/raw/baige_2018/S2_47RMQ_20181109T040948_refl.tif"
+    ) as scene:
+        observed = np.zeros(scene.shape, dtype=bool)
+        for index in range(1, scene.count + 1):
+            band = scene.read(index).astype("float64")
+            observed |= np.isfinite(band) & (band > 0)
+    for label, layer in (("landslide", truth_landslide), ("lake", truth_lake)):
+        if layer is not None:
+            blind = int(np.count_nonzero(layer & ~observed))
+            if blind:
+                print(
+                    f"  NOTE: {blind} px of the {label} truth lie where the "
+                    f"11-09 scene has no data ({blind * 100 / 1e6:.4f} km2). "
+                    f"They are excluded from scoring, not counted as misses. "
+                    f"If this is large, a vertex was probably placed in the "
+                    f"black nodata area."
+                )
     if truth_landslide is None:
         print(f"  {LANDSLIDE_TRUTH.name}: NOT FOUND")
     if truth_lake is None:
@@ -151,14 +195,14 @@ def main() -> int:
     # ---- the landslide change map ---------------------------------------- #
     if truth_landslide is not None:
         predicted = fused["change"].astype(bool)
-        scores = confusion(truth_landslide, predicted)
+        scores = confusion(truth_landslide, predicted, observed)
         results["landslide_change"] = {
             **scores,
-            "truth_area_m2": round(float(truth_landslide.sum() * area), 1),
-            "predicted_area_m2": round(float(predicted.sum() * area), 1),
+            "truth_area_m2": round(float((truth_landslide & observed).sum() * area), 1),
+            "predicted_area_m2": round(float((predicted & observed).sum() * area), 1),
         }
         print(f"\n{'=' * 66}\nPHASE 5 landslide change vs truth\n{'=' * 66}")
-        report(scores, truth_landslide, predicted, area)
+        report(scores, truth_landslide & observed, predicted & observed, area)
 
     # ---- the barrier lake ------------------------------------------------- #
     if truth_lake is not None:
@@ -193,15 +237,21 @@ def main() -> int:
         if lake_mask is None:
             print("\nno lake detected, so there is nothing to score")
         else:
-            scores = confusion(truth_lake, lake_mask)
+            scores = confusion(truth_lake, lake_mask, observed)
             results["barrier_lake"] = {
                 **scores,
-                "truth_area_m2": round(float(truth_lake.sum() * area), 1),
-                "predicted_area_m2": round(float(lake_mask.sum() * area), 1),
+                "truth_area_m2": round(float((truth_lake & observed).sum() * area), 1),
+                "predicted_area_m2": round(float((lake_mask & observed).sum() * area), 1),
                 "upstream_search_m": cfg.detection.barrier_lake.upstream_search_m,
             }
+            # Kept so the errors can be diagnosed (14_diagnose_lake_errors.py)
+            # without re-deriving the detection.
+            np.savez_compressed(
+                ROOT / "data" / "processed" / "baige_lake_scored.npz",
+                detected=lake_mask, truth=truth_lake, observed=observed,
+            )
             print(f"\n{'=' * 66}\nPHASE 8 barrier lake vs truth\n{'=' * 66}")
-            report(scores, truth_lake, lake_mask, area)
+            report(scores, truth_lake & observed, lake_mask & observed, area)
             print(
                 f"  NOTE: the detected lake is bounded by "
                 f"upstream_search_m = "
@@ -239,12 +289,23 @@ def report(scores, truth, predicted, area) -> None:
     print(f"  false negative {scores['false_negative_px']:7d} px  "
           f"(truth, missed)")
     if scores["recall"] is not None and scores["precision"] is not None:
+        # Direction only. An earlier version of this message went on to say
+        # the thresholds were "too strict" or "too loose", which is a
+        # conclusion about causes that a pair of totals cannot support. On the
+        # first real run most of the false positives were one patch where the
+        # hand-drawn reference had simply stopped short of the scene edge --
+        # nothing to do with thresholds. Run 14_diagnose_lake_errors.py before
+        # concluding anything about why.
         if scores["recall"] < scores["precision"]:
-            print("\n  Recall below precision: the detector MISSED more of the "
-                  "feature than it over-flagged. Thresholds are too strict.")
+            print("\n  Recall below precision: more of the reference was missed "
+                  "than ground was over-flagged.")
         else:
-            print("\n  Precision below recall: the detector OVER-FLAGGED more "
-                  "than it missed. Thresholds are too loose.")
+            print("\n  Precision below recall: more ground was over-flagged "
+                  "than reference was missed.")
+        print("  This says WHICH WAY the totals lean, not WHY. Run "
+              "scripts/baige/14_diagnose_lake_errors.py to see whether the "
+              "errors are shoreline noise, a reference gap or a real "
+              "detection error.")
 
 
 if __name__ == "__main__":
